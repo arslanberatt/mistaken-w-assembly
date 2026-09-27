@@ -1,0 +1,2538 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10151f" />
+    <title>Ders Akışı</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2310161f'/%3E%3Cpath d='M20 21v22M32 15v34M44 24v16' stroke='%236ee7c8' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light;
+        --background: #ffffff; --foreground: #1d2530;
+        --card: #ffffff; --card-foreground: #1d2530;
+        --muted: #f4f5f7; --muted-2: #e5e7eb; --muted-foreground: #5f6b7a;
+        --border: #d8dce2; --input: #c5cad3; --ring: #007aff;
+        --primary: #007aff; --primary-foreground: #ffffff;
+        --accent: #007aff; --accent-soft: #e6f1ff; --accent-fg: #0062cc;
+        --pink: #d92d20; --pink-soft: #fdeceb; --pink-fg: #b42318;
+        --success: #1a9b4b; --success-soft: #e6f5ec; --success-fg: #137a3a;
+        --danger: #d92d20; --danger-soft: #fdeceb; --danger-fg: #b42318;
+        --warn: #c77700; --warn-soft: #fff4e0; --warn-fg: #8a5300;
+        --blue: #007aff; --blue-soft: #e6f1ff; --blue-fg: #0062cc;
+        --me-bg: #007aff; --me-fg: #ffffff;
+        --shadow: none;
+        --radius: 6px;
+        --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      * { box-sizing: border-box; }
+      [hidden] { display: none !important; }
+      html, body { height: 100%; }
+      body { margin: 0; min-width: 320px; background: var(--background); color: var(--foreground); font-family: var(--font); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+      button, select, input { font: inherit; color: inherit; }
+
+      .app { height: 100vh; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 0; }
+      .app.collapsed { grid-template-columns: minmax(0, 1fr); }
+      .app.collapsed .sidebar { display: none; }
+      .card { background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: none; }
+
+      /* ---------- Sidebar ---------- */
+      .sidebar { min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px; background: var(--card); border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--muted-2) transparent; }
+      .brand { display: flex; align-items: center; gap: 11px; min-width: 0; padding: 2px 4px 4px; }
+      .logo { width: 38px; height: 38px; border-radius: 6px; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; box-shadow: none; }
+      .brand h1 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+      .brand p { margin: 0; color: var(--muted-foreground); font-size: 12px; line-height: 1.3; }
+
+      .tabs { display: grid; gap: 3px; flex: none; }
+      .tab { display: flex; align-items: center; justify-content: flex-start; gap: 10px; height: 38px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; color: var(--muted-foreground); font-size: 13.5px; font-weight: 500; text-align: left; }
+      .tab svg { flex: none; }
+      .tab:hover:not(:disabled) { opacity: 1; background: var(--muted); color: var(--foreground); }
+      .tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-fg); font-weight: 600; }
+      .sidebar-sep { height: 1px; background: var(--border); flex: none; }
+      .panels { display: flex; flex-direction: column; gap: 12px; }
+      .panel { display: flex; flex-direction: column; gap: 12px; animation: panel-in .14s ease-out; }
+      .panel[hidden] { display: none; }
+      @keyframes panel-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+      .panel-title { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-foreground); }
+
+      .section-title { margin: 0 0 2px; font-size: 13px; font-weight: 600; }
+      .fields { display: grid; gap: 10px; }
+      label { display: grid; gap: 5px; font-size: 12.5px; font-weight: 500; min-width: 0; }
+      .friend-name[hidden] { display: none; }
+      select, input[type="text"], input[type="number"] { width: 100%; height: 36px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--input); background: var(--card); color: var(--foreground); font-size: 14px; outline: none; transition: border-color .15s, box-shadow .15s; }
+      select { appearance: none; padding-right: 32px; cursor: pointer; }
+      select option { background: var(--card); color: var(--foreground); }
+      select:focus-visible, input:focus-visible { border-color: var(--ring); box-shadow: none; }
+      input::placeholder { color: #9b9ab3; }
+      input[type="number"] { font-family: var(--mono); font-size: 13px; text-align: right; padding: 0 10px; }
+      .fields.two { grid-template-columns: 1.5fr 1fr; }
+      .fields.two .friend-name[hidden] + label { grid-column: 1 / -1; }
+
+      .note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted-foreground); }
+      .note strong { color: var(--foreground); font-weight: 600; }
+      .box { padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--muted); }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .chip { display: inline-flex; align-items: center; gap: 2px; height: 28px; padding: 0 4px 0 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--accent-soft); color: var(--accent-fg); font-size: 12.5px; font-weight: 500; }
+      .chip button { width: 20px; height: 20px; padding: 0; border-radius: 50%; background: transparent; color: var(--accent-fg); font-size: 14px; line-height: 1; }
+      .chip button:hover:not(:disabled) { background: var(--accent); color: #fff; opacity: 1; }
+      .add-row { display: flex; gap: 8px; }
+      .add-row button { height: 36px; flex: none; }
+      .fix-list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+      .fix-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12.5px; background: var(--card); }
+      .fix-list s { color: var(--danger-fg); text-decoration-color: var(--danger); }
+      .fix-list .count { font-family: var(--mono); font-size: 11px; color: var(--muted-foreground); }
+      .separator { height: 1px; background: var(--border); flex: none; }
+
+      .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .stat { padding: 11px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--muted); min-width: 0; }
+      .stat.wide { grid-column: 1 / -1; }
+      .stat .k { font-size: 11.5px; color: var(--muted-foreground); }
+      .stat .v { font-family: var(--mono); font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
+      .stat .s { font-family: var(--mono); font-size: 11px; color: var(--muted-foreground); }
+      .rate-row { display: grid; grid-template-columns: 1fr 86px; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 400; }
+      .mini { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; border-radius: 6px; background: var(--muted); font-size: 12.5px; color: var(--muted-foreground); }
+      .mini b { font-family: var(--mono); color: var(--foreground); font-weight: 600; }
+      .top-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+      .cost-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); font-family: var(--mono); font-size: 12px; color: var(--foreground); }
+      .cost-pill span { font-family: var(--font); color: var(--muted-foreground); }
+      .cost-pill:hover:not(:disabled) { background: var(--muted); opacity: 1; }
+
+      .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .actions .wide { grid-column: 1 / -1; }
+      .claude-account { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--accent); }
+      .claude-account strong { display: block; font-size: 12.5px; font-weight: 600; }
+      .claude-account small { display: block; color: var(--muted-foreground); font-size: 11.5px; overflow-wrap: anywhere; }
+      .claude-actions { display: flex; gap: 6px; flex: none; }
+      .claude-account button { flex: none; height: 30px; padding: 0 10px; font-size: 12px; }
+      .claude-account button[hidden] { display: none; }
+      .privacy-dialog { width: min(440px, calc(100vw - 32px)); padding: 22px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--foreground); box-shadow: none; }
+      .privacy-dialog::backdrop { background: rgba(27, 27, 47, .45); backdrop-filter: blur(2px); }
+      .privacy-dialog h2 { margin: 0 0 8px; font-size: 17px; }
+      .privacy-dialog p { margin: 0 0 14px; color: var(--muted-foreground); font-size: 13px; }
+      .privacy-dialog .actions { grid-template-columns: 1fr; }
+
+      button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 6px; border: 1px solid transparent; background: var(--primary); color: var(--primary-foreground); font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background-color .15s, color .15s, border-color .15s, box-shadow .15s, transform .08s, opacity .15s; }
+      button:hover:not(:disabled) { opacity: .9; }
+      button.secondary { background: var(--card); color: var(--foreground); border-color: var(--input); font-weight: 500; }
+      button.secondary:hover:not(:disabled) { background: var(--muted); opacity: 1; }
+      button.accent { background: var(--accent); color: #fff; }
+      button.danger-ghost { background: transparent; color: var(--danger-fg); border-color: var(--border); }
+      button.danger-ghost:hover:not(:disabled) { background: var(--danger-soft); opacity: 1; }
+      button:not(:disabled):active { transform: scale(.97); }
+      button:focus-visible { outline: none; box-shadow: none; }
+      button:disabled { opacity: .5; cursor: not-allowed; }
+      button.done { background: var(--success-soft) !important; color: var(--success-fg) !important; border-color: color-mix(in srgb, var(--success) 45%, transparent) !important; opacity: 1 !important; }
+      button.failed { background: var(--danger-soft) !important; color: var(--danger-fg) !important; border-color: color-mix(in srgb, var(--danger) 45%, transparent) !important; opacity: 1 !important; }
+      button.active-state { background: var(--success-soft); color: var(--success-fg); border-color: color-mix(in srgb, var(--success) 45%, transparent); opacity: 1; }
+      .actions button { height: 36px; }
+      .hint { margin: 0; padding: 0; border-radius: 6px; background: var(--muted); border: 1px solid var(--border); color: var(--muted-foreground); font-size: 12.5px; line-height: 1.55; }
+      .hint strong { color: var(--foreground); font-weight: 600; }
+
+      /* status + inline rename + ASR fix */
+      .status { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--muted-foreground); font-size: 12px; font-weight: 500; white-space: nowrap; }
+      .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted-foreground); opacity: .6; }
+      .status.live { color: var(--success-fg); background: var(--success-soft); border-color: transparent; }
+      .status.live::before { background: var(--success); opacity: 1; animation: pulse 1.6s infinite; }
+      @keyframes pulse { 0% { box-shadow: none; } 70% { box-shadow: none; } 100% { box-shadow: none; } }
+      .meta .name.editable { cursor: pointer; border-radius: 6px; padding: 0 3px; margin: 0 -3px; }
+      .meta .name.editable:hover { background: var(--muted-2); }
+      .rename-input { height: 22px !important; width: 140px !important; padding: 0 6px !important; font-size: 12px !important; border-radius: 6px !important; }
+      .edited-mark { margin-left: 6px; font-size: 10.5px; opacity: .6; white-space: nowrap; }
+      .bubble::selection, .bubble *::selection { background: #3b82f6; color: #fff; }
+      .fix-pop { position: fixed; z-index: 70; width: 300px; padding: 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); box-shadow: none; display: grid; gap: 10px; animation: select-in .12s ease-out; }
+      .fix-pop[hidden] { display: none; }
+      .fix-title { font-size: 13px; font-weight: 600; }
+      .fix-from { font-size: 12px; color: var(--muted-foreground); }
+      .fix-from code { font-family: var(--mono); color: var(--danger-fg); background: var(--danger-soft); border-radius: 6px; padding: 1px 5px; text-decoration: line-through; }
+      .fix-check { display: flex !important; align-items: center; gap: 8px; font-weight: 400; color: var(--muted-foreground); cursor: pointer; }
+      .fix-check input { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); }
+      .fix-actions { display: flex; justify-content: flex-end; gap: 8px; }
+      .fix-actions button { height: 32px; }
+
+      /* ---------- Main ---------- */
+      .main { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px 20px 20px; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .menu-btn { width: 36px; height: 36px; padding: 0; flex: none; }
+      .topbar h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+      .topbar p { margin: 0; color: var(--muted-foreground); font-size: 12.5px; }
+      .chat { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+      .chat-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+      .chat-header h2 { margin: 0; font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+      .chat-header { flex-wrap: wrap; }
+      .chat-header p { margin: 0; color: var(--muted-foreground); font-size: 12.5px; }
+      .view-switch { display: flex; gap: 3px; padding: 3px; border-radius: 6px; background: var(--muted); }
+      .view-switch button { height: 30px; padding: 0 14px; font-size: 12.5px; font-weight: 500; background: transparent; color: var(--muted-foreground); border-radius: 6px; }
+      .view-switch button[aria-selected="true"] { background: var(--card); color: var(--accent-fg); font-weight: 600; box-shadow: none; }
+      .badge { white-space: nowrap; display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 6px; background: var(--muted); color: var(--muted-foreground); font-family: var(--mono); font-size: 11.5px; font-weight: 500; }
+
+      .log { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 22px max(20px, calc((100% - 880px) / 2)) 30px; display: flex; flex-direction: column; scrollbar-width: thin; scrollbar-color: var(--muted-2) transparent; }
+      .log[hidden], .insights[hidden] { display: none; }
+      .log::-webkit-scrollbar { width: 8px; }
+      .log::-webkit-scrollbar-thumb { background: var(--muted-2); border-radius: 6px; }
+      .empty { margin: auto; max-width: 340px; text-align: center; color: var(--muted-foreground); font-size: 13px; }
+      .empty-icon { width: 56px; height: 56px; margin: 0 auto 14px; border-radius: 6px; background: var(--accent); display: grid; place-items: center; color: var(--accent-fg); }
+      .empty strong { display: block; color: var(--foreground); font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+
+      .msg { display: flex; align-items: flex-end; gap: 10px; max-width: min(78%, 720px); margin-top: 14px; }
+      .msg.cont { margin-top: 3px; }
+      .msg.me { align-self: flex-end; flex-direction: row-reverse; }
+      .avatar { width: 32px; height: 32px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--muted-2); color: var(--foreground); }
+      .msg.cont .avatar { visibility: hidden; height: 0; }
+      .msg.me .avatar { background: var(--accent); color: #fff; }
+      .avatar.c1 { background: var(--blue-soft); color: var(--blue-fg); } .avatar.c2 { background: var(--accent-soft); color: var(--accent-fg); }
+      .avatar.c3 { background: var(--warn-soft); color: var(--warn-fg); } .avatar.c4 { background: var(--success-soft); color: var(--success-fg); }
+      .avatar.c5 { background: var(--pink-soft); color: var(--pink-fg); }
+      .msg-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+      .msg.me .msg-body { align-items: flex-end; }
+      .meta { display: flex; align-items: baseline; gap: 8px; padding: 0 4px; font-size: 12px; }
+      .meta .name { font-weight: 600; color: var(--foreground); }
+      .meta .time { font-family: var(--mono); font-size: 11px; color: var(--muted-foreground); }
+      .bubble { padding: 10px 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--border); color: var(--foreground); font-size: 14.5px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; border-bottom-left-radius: 6px; box-shadow: none; }
+      .msg.cont .bubble { border-top-left-radius: 6px; }
+      .msg.me .bubble { background: var(--me-bg); color: var(--me-fg); border-color: transparent; border-bottom-left-radius: 18px; border-bottom-right-radius: 6px; }
+      .msg.me.cont .bubble { border-top-left-radius: 18px; border-top-right-radius: 6px; }
+      .msg.live .bubble { opacity: .75; border-style: dashed; }
+      .msg.me.live .bubble { border: 1px dashed rgba(255,255,255,.6); }
+      .live-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--success-fg); font-weight: 500; }
+      .live-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: blink 1s infinite; }
+      @keyframes blink { 50% { opacity: .25; } }
+      mark.err { background: rgba(255, 92, 138, .22); color: inherit; border-radius: 6px; padding: 0 2px; text-decoration: underline wavy var(--danger); text-decoration-thickness: 1.5px; text-underline-offset: 3px; cursor: help; }
+      .msg.me mark.err { background: rgba(255, 92, 138, .35); color: #fff; text-decoration-color: #ff9db8; }
+
+      .jump { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); height: 32px; padding: 0 14px; border-radius: 6px; font-size: 12px; box-shadow: none; }
+      .jump:not(:disabled):active { transform: translateX(-50%) scale(.97); }
+      .jump[hidden] { display: none; }
+
+      /* ---------- Insights ---------- */
+      .insights { flex: 1; min-height: 0; overflow-y: auto; padding: 18px max(20px, calc((100% - 880px) / 2)) 40px; background: var(--background); }
+      .history-trigger { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 10px 12px 10px 14px; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--foreground); text-align: left; font-weight: 400; height: auto; }
+      .history-trigger:hover:not(:disabled) { background: var(--muted); opacity: 1; }
+      .history-trigger-text { display: grid; gap: 1px; min-width: 0; }
+      .history-trigger-text .k { font-size: 11px; color: var(--muted-foreground); }
+      .history-trigger-text .v { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .history-trigger svg { flex: none; color: var(--muted-foreground); }
+      .insight-source-status { color: var(--muted-foreground); font-size: 12px; }
+      .history-lessons { display: grid; gap: 8px; max-height: 60vh; overflow: auto; }
+      .history-lesson { border: 1px solid var(--border); border-radius: 6px; background: var(--card); }
+      .history-lesson summary { padding: 10px 12px; cursor: pointer; font-weight: 600; font-size: 13px; }
+      .history-lesson-body { padding: 0 12px 12px; color: var(--muted-foreground); font-size: 12px; }
+      .history-lesson-body p { margin: 5px 0; }
+      .insight-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 14px; scrollbar-width: none; }
+      .insight-tabs::-webkit-scrollbar { display: none; }
+      .insight-tabs button { flex: none; background: var(--card); color: var(--muted-foreground); border: 1px solid var(--border); font-size: 12.5px; font-weight: 500; height: 34px; border-radius: 6px; padding: 0 14px; }
+      .insight-tabs button:hover:not(:disabled) { background: var(--muted); opacity: 1; }
+      .insight-tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+      .insight-panel { display: grid; gap: 14px; padding-top: 4px; }
+      .insight-panel h3 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+      .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+      .insight-card { padding: 16px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; box-shadow: none; }
+      .insight-card h4 { margin: 0 0 8px; font-size: 12.5px; color: var(--muted-foreground); font-weight: 600; }
+      .insight-card p { margin: 0; }
+      .insight-panel p { margin: 0; }
+      .insight-metric { display: block; font-family: var(--mono); font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+      .insight-list { margin: 4px 0 0; padding-left: 18px; }
+      .insight-list li { margin: 6px 0; }
+      .insight-meta { font-size: 11.5px; color: var(--muted-foreground); margin-bottom: 8px; }
+      .insight-note { color: var(--muted-foreground); font-size: 12.5px; }
+      .insight-hero { padding: 20px; border-radius: 6px; background: var(--accent); border: 1px solid var(--border); }
+      .insight-hero h3 { margin-bottom: 6px; }
+      .insight-hero p { margin: 0; color: #3e3d5c; font-size: 14.5px; line-height: 1.6; }
+      .insight-hero .insight-note { margin-top: 10px; }
+      .card-good { border-top: 4px solid var(--success); }
+      .card-focus { border-top: 4px solid var(--pink); }
+      .card-good h4 { color: var(--success-fg); } .card-focus h4 { color: var(--pink-fg); }
+      .card-good .insight-list li::marker { color: var(--success); } .card-focus .insight-list li::marker { color: var(--pink); }
+
+      .bar-row { display: grid; grid-template-columns: minmax(80px, 150px) 1fr 118px; align-items: center; gap: 12px; font-size: 13px; padding: 5px 0; }
+      .bar-label { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .bar-value { white-space: nowrap; font-family: var(--mono); font-size: 11.5px; color: var(--muted-foreground); text-align: right; }
+      .bar-track { height: 12px; border-radius: 6px; overflow: hidden; background: var(--muted-2); }
+      .bar-fill { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .7s cubic-bezier(.21,1.02,.73,1); }
+      .bar-fill.c-good { background: var(--accent); }
+      .bar-fill.c-blue { background: var(--accent); }
+      .bar-fill.c-purple { background: var(--accent); }
+      .bar-fill.c-pink { background: var(--accent); }
+      .bar-fill.c-red { background: var(--accent); }
+      .bar-fill.c-orange { background: var(--accent); }
+
+      .metric-card { position: relative; overflow: hidden; }
+      .metric-card .insight-metric { margin-bottom: 8px; }
+      .metric-card.m-good .insight-metric { color: var(--success-fg); }
+      .metric-card.m-bad .insight-metric { color: var(--danger-fg); }
+      .metric-card.m-info .insight-metric { color: var(--accent-fg); }
+      .mistake { display: grid; gap: 10px; }
+      .mistake-head { display: flex; align-items: center; gap: 10px; }
+      .rank { width: 30px; height: 30px; flex: none; border-radius: 6px; display: grid; place-items: center; font-weight: 700; font-size: 13px; color: #fff; background: var(--danger); }
+      .rank.r2 { background: var(--pink); } .rank.r3 { background: var(--warn); } .rank.rn { background: var(--accent); }
+      .mistake-head strong { font-size: 14.5px; flex: 1; min-width: 0; }
+      .pill { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 6px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+      .pill.red { background: var(--danger-soft); color: var(--danger-fg); }
+      .pill.pink { background: var(--pink-soft); color: var(--pink-fg); }
+      .pill.purple { background: var(--accent-soft); color: var(--accent-fg); }
+      .pill.green { background: var(--success-soft); color: var(--success-fg); }
+      .pill.blue { background: var(--blue-soft); color: var(--blue-fg); }
+      .tip { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 6px; background: var(--warn-soft); color: #7a4a06; font-size: 12.5px; line-height: 1.5; }
+      .tip::before { content: "💡"; flex: none; }
+      .tip.plain { background: var(--muted); color: var(--muted-foreground); }
+      .tip.plain::before { content: "ℹ️"; }
+
+      .insight-feedback { display: grid; gap: 12px; }
+      .fb-card { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--border); border-left: 4px solid var(--danger); background: var(--card); border-radius: 6px; }
+      .fb-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+      .fb-row { display: grid; gap: 4px; }
+      .fb-label { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+      .fb-label.bad { color: var(--danger-fg); } .fb-label.good { color: var(--success-fg); }
+      .fb-text { padding: 10px 12px; border-radius: 6px; font-size: 14.5px; line-height: 1.7; }
+      .fb-text.bad { background: var(--danger-soft); }
+      .fb-text.good { background: var(--success-soft); }
+      .fb-text del { text-decoration: underline wavy var(--danger); text-decoration-thickness: 2px; text-underline-offset: 4px; color: var(--danger-fg); font-weight: 600; background: rgba(255, 92, 138, .18); border-radius: 6px; padding: 0 2px; }
+      .fb-text ins { text-decoration: none; color: var(--success-fg); font-weight: 700; background: rgba(22, 163, 74, .16); border-radius: 6px; padding: 0 2px; border-bottom: 2px solid var(--success); }
+      .vocab-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; padding: 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--border); }
+      .vocab-form button { height: 36px; }
+      .vocab-card { display: grid; gap: 10px; }
+      .vocab-word { font-size: 18px; font-weight: 700; color: var(--accent-fg); letter-spacing: -.01em; }
+      .vocab-meaning { font-size: 14px; }
+      .quote { padding: 9px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0; font-size: 13px; font-style: italic; color: #3e3d5c; }
+      .vocab-alternatives { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12px; color: var(--muted-foreground); }
+      .suggest-chip { display: inline-flex; align-items: center; height: 26px; padding: 0 11px; border-radius: 6px; background: var(--success-soft); color: var(--success-fg); font-size: 12.5px; font-weight: 600; }
+      .study-step { display: grid; grid-template-columns: 38px 1fr; gap: 12px; }
+      .study-num { width: 38px; height: 38px; border-radius: 6px; display: grid; place-items: center; font-weight: 700; color: #fff; background: var(--accent); }
+      .study-body { display: grid; gap: 8px; min-width: 0; }
+      .study-body strong { font-size: 15px; }
+
+      .onboard { display: grid; gap: 14px; padding: 28px 22px; text-align: center; border-radius: 6px; background: var(--accent); border: 1px solid var(--border); }
+      .onboard h3 { margin: 0; }
+      .onboard-icon { width: 60px; height: 60px; margin: 0 auto; border-radius: 6px; background: #fff; display: grid; place-items: center; font-size: 28px; box-shadow: none; }
+      .onboard-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; text-align: left; }
+      .onboard-step { display: grid; gap: 4px; padding: 12px; border-radius: 6px; background: rgba(255,255,255,.75); font-size: 12.5px; color: #3e3d5c; }
+      .onboard-step b { color: var(--accent-fg); font-size: 12px; }
+
+      /* analysis loader */
+      .loader { display: grid; gap: 16px; }
+      .loader-card { display: grid; gap: 16px; padding: 22px; border-radius: 6px; background: var(--accent); border: 1px solid var(--border); }
+      .loader-head { display: flex; align-items: center; gap: 14px; }
+      .spinner { width: 42px; height: 42px; flex: none; border-radius: 50%; border: 4px solid rgba(124,108,240,.2); border-top-color: var(--accent); border-right-color: var(--pink); animation: spin .9s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .loader-head h3 { font-size: 17px; }
+      .loader-head p { margin: 0; font-size: 12.5px; color: var(--muted-foreground); }
+      .loader-progress { display: grid; gap: 6px; }
+      .loader-progress .bar-track { height: 14px; background: rgba(255,255,255,.8); }
+      .loader-progress .bar-fill { background: var(--accent); transition: width .4s ease-out; position: relative; overflow: hidden; }
+      .loader-progress .bar-fill::after { content: ""; position: absolute; inset: 0; background: var(--accent); animation: shimmer 1.4s infinite; }
+      @keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+      .loader-meta { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11.5px; color: var(--muted-foreground); }
+      .loader-steps { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+      .loader-steps li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; background: rgba(255,255,255,.6); font-size: 13px; color: var(--muted-foreground); transition: background .2s, color .2s; }
+      .loader-steps li::before { content: ""; width: 18px; height: 18px; flex: none; border-radius: 50%; border: 2px solid var(--input); background: #fff; }
+      .loader-steps li.done { color: var(--success-fg); }
+      .loader-steps li.done::before { content: "✓"; display: grid; place-items: center; border-color: var(--success); background: var(--success); color: #fff; font-size: 11px; font-weight: 700; }
+      .loader-steps li.active { background: #fff; color: var(--foreground); font-weight: 600; box-shadow: none; }
+      .loader-steps li.active::before { border-color: var(--accent); border-top-color: transparent; animation: spin .8s linear infinite; }
+      .skeleton { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+      .skeleton-card { height: 110px; border-radius: 6px; background: var(--accent); background-size: 200% 100%; animation: skel 1.4s infinite linear; border: 1px solid var(--border); }
+      @keyframes skel { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+      .toasts { position: fixed; right: 20px; bottom: 20px; z-index: 90; display: flex; flex-direction: column; gap: 8px; width: 356px; max-width: calc(100vw - 32px); pointer-events: none; }
+      .toast { pointer-events: auto; display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 6px; background: var(--card); border: 1px solid var(--border); color: var(--foreground); font-size: 13px; line-height: 1.45; box-shadow: none; animation: toast-in .22s cubic-bezier(.21,1.02,.73,1); }
+      .toast::before { content: "i"; flex: none; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--accent-soft); color: var(--accent-fg); }
+      .toast.success::before { content: "✓"; background: var(--success); color: #fff; }
+      .toast.error::before { content: "!"; background: var(--danger); color: #fff; }
+      .toast.warn::before { content: "!"; background: #f59e0b; color: #fff; }
+      .toast.leaving { opacity: 0; transform: translateY(6px) scale(.98); transition: opacity .2s, transform .2s; }
+      @keyframes toast-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+
+      /* drawer */
+      .drawer-overlay { position: fixed; inset: 0; z-index: 80; background: rgba(27,27,47,.4); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+      .drawer-overlay.open { opacity: 1; pointer-events: auto; }
+      .drawer { position: fixed; top: 0; right: 0; bottom: 0; z-index: 81; width: min(380px, 100vw); background: var(--card); color: var(--card-foreground); border-left: 1px solid var(--border); box-shadow: none; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .22s cubic-bezier(.21,1.02,.73,1); }
+      .drawer.open { transform: translateX(0); }
+      .drawer-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex: none; }
+      .drawer-header h3 { margin: 0; font-size: 14px; font-weight: 700; }
+      .drawer-close { width: 32px; height: 32px; padding: 0; flex: none; background: var(--muted); color: var(--foreground); border: 0; }
+      .drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: grid; gap: 12px; align-content: start; }
+
+      /* shadcn/ui Select */
+      .native-hidden { position: absolute !important; left: 0; top: 0; width: 1px !important; height: 1px !important; padding: 0 !important; border: 0 !important; background: none !important; opacity: 0 !important; pointer-events: none !important; overflow: hidden; }
+      .ui-select { position: relative; }
+      .ui-select-trigger { width: 100%; height: 36px; justify-content: space-between; gap: 8px; padding: 0 10px 0 12px; background: var(--card); color: var(--foreground); border: 1px solid var(--input); font-size: 14px; font-weight: 400; }
+      .ui-select-trigger:hover:not(:disabled) { opacity: 1; background: var(--muted); }
+      .ui-select-trigger:not(:disabled):active { transform: none; }
+      .ui-select.open .ui-select-trigger, .ui-select-trigger:focus-visible { border-color: var(--ring); box-shadow: none; }
+      .ui-select-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+      .ui-select-trigger svg { flex: none; color: var(--muted-foreground); transition: transform .15s ease; }
+      .ui-select.open .ui-select-trigger svg { transform: rotate(180deg); }
+      .ui-select-content { position: fixed; z-index: 95; padding: 4px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); box-shadow: none; overflow-y: auto; overscroll-behavior: contain; transform-origin: top center; animation: select-in .12s ease-out; scrollbar-width: thin; }
+      .ui-select-content[hidden] { display: none; }
+      @keyframes select-in { from { opacity: 0; transform: translateY(-4px) scale(.97); } to { opacity: 1; transform: none; } }
+      .ui-select-item { position: relative; display: flex; align-items: center; min-height: 34px; padding: 6px 32px 6px 10px; border-radius: 6px; font-size: 14px; line-height: 1.35; cursor: default; user-select: none; }
+      .ui-select-item.active { background: var(--accent-soft); }
+      .ui-select-item svg { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); visibility: hidden; color: var(--accent-fg); }
+      .ui-select-item[aria-selected="true"] { font-weight: 600; }
+      .ui-select-item[aria-selected="true"] svg { visibility: visible; }
+
+      .card-error { border-top: 4px solid var(--danger); background: var(--danger-soft); }
+      .insights.loading .insight-tabs, .insights.loading .history-trigger { display: none; }
+
+      @media (max-width: 900px) {
+        .app { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 100vh; }
+        .app.collapsed { grid-template-columns: minmax(0, 1fr); }
+        .sidebar { border-right: 0; border-bottom: 1px solid var(--border); overflow: visible; }
+        .tabs { grid-template-columns: repeat(4, 1fr); }
+        .tab { justify-content: center; padding: 0 4px; font-size: 12.5px; flex-direction: column; height: 52px; gap: 2px; }
+        .main { padding: 12px 12px 16px; }
+        .chat { height: 78vh; flex: none; }
+      }
+      @media (max-width: 520px) {
+        .brand p { display: none; }
+        .msg { max-width: 92%; }
+        .toasts { left: 16px; right: 16px; width: auto; }
+        .vocab-form { grid-template-columns: 1fr; }
+        .bar-row { grid-template-columns: 80px 1fr 96px; gap: 8px; }
+        .drawer { width: 100vw; border-left: 0; }
+        .topbar p { display: none; }
+      }
+
+      /* ===== Resmi / sade tema (Cambridge tarzı) ===== */
+      body { font-size: 13.5px; }
+      .logo { background: #0b2a4a; }
+      .spinner { border: 3px solid var(--muted-2); border-top-color: var(--accent); }
+      .app { grid-template-columns: 276px minmax(0, 1fr); }
+      .sidebar { padding: 14px 12px; gap: 10px; background: var(--muted); }
+      .brand h1 { font-size: 15px; }
+      .claude-account { background: var(--card); }
+      .card, .insight-card, .stat, .fb-card, .history-lesson, .vocab-form { box-shadow: none; }
+      .card { border-radius: 6px; }
+      .main { padding: 12px 14px 14px; gap: 0; }
+      .chat-header { padding: 8px 14px; }
+      .chat-header p { display: none; }
+      .view-switch { border-radius: 6px; padding: 2px; background: var(--muted); }
+      .view-switch button { border-radius: 4px; height: 28px; }
+      .view-switch button[aria-selected="true"] { background: var(--card); color: var(--accent-fg); box-shadow: none; outline: 1px solid var(--border); }
+      .badge, .cost-pill, .status, .pill, .chip, .suggest-chip { border-radius: 4px; }
+      button { height: 34px; border-radius: 6px; font-weight: 500; }
+      button.secondary { background: var(--card); }
+      button.accent { background: var(--accent); }
+      .actions button { height: 32px; }
+      .msg .avatar { width: 28px; height: 28px; font-size: 11px; }
+      .msg.me .avatar { background: var(--accent); color: #fff; }
+      .avatar.c1, .avatar.c2, .avatar.c3, .avatar.c4, .avatar.c5 { background: var(--muted-2); color: var(--foreground); }
+      .bubble { border-radius: 10px; border-bottom-left-radius: 3px; box-shadow: none; }
+      .msg.me .bubble { border-bottom-left-radius: 10px; border-bottom-right-radius: 3px; }
+      .msg.cont .bubble { border-top-left-radius: 3px; }
+      .msg.me.cont .bubble { border-top-left-radius: 10px; border-top-right-radius: 3px; }
+      .empty-icon { background: var(--muted); color: var(--accent-fg); border-radius: 6px; }
+      .log { padding-top: 14px; }
+
+      /* sidebar accordion */
+      .tabs { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 6px; background: var(--card); overflow: hidden; }
+      .tab { position: relative; width: 100%; height: 38px; border-radius: 0; border-bottom: 1px solid var(--border); padding: 0 12px; font-size: 13px; font-weight: 600; color: var(--foreground); background: var(--card); justify-content: flex-start; }
+      .tab:last-of-type { border-bottom: 0; }
+      .tab::after { content: ""; margin-left: auto; width: 7px; height: 7px; border-right: 2px solid var(--muted-foreground); border-bottom: 2px solid var(--muted-foreground); transform: rotate(-45deg); transition: transform .15s; }
+      .tab[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-fg); }
+      .tab[aria-selected="true"]::after { transform: rotate(45deg); border-color: var(--accent-fg); }
+      .tab svg { display: none; }
+      .tabs > .panel { padding: 12px; background: var(--card); border-bottom: 1px solid var(--border); animation: none; gap: 10px; }
+      .tabs > .panel:last-child { border-bottom: 0; }
+      .fields.two { grid-template-columns: 1fr; }
+      select, input[type="text"], input[type="number"], .ui-select-trigger { height: 32px; border-radius: 6px; }
+      .stat, .mini, .box, .fix-list li, .claude-account { border-radius: 6px; }
+
+      /* insights: accordion, düz */
+      .insights { padding: 12px max(14px, calc((100% - 860px) / 2)) 24px; background: var(--card); }
+      .history-trigger { border-radius: 6px; padding: 7px 10px 7px 12px; margin-bottom: 10px; background: var(--muted); }
+      .insight-tabs { padding-bottom: 10px; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+      .insight-tabs button { border-radius: 4px; height: 30px; padding: 0 12px; background: transparent; border: 1px solid transparent; color: var(--muted-foreground); font-weight: 500; }
+      .insight-tabs button:hover:not(:disabled) { background: var(--muted); }
+      .insight-tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-fg); border-color: transparent; font-weight: 600; }
+      .insight-panel { gap: 8px; padding-top: 0; }
+      .insight-panel h3 { font-size: 16px; }
+      .lead { margin: 0; padding: 2px 0 6px 12px; border-left: 3px solid var(--accent); font-size: 14px; line-height: 1.6; }
+      .acc { border: 1px solid var(--border); border-radius: 6px; background: var(--card); }
+      .acc > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: 38px; padding: 6px 12px; font-weight: 600; font-size: 13px; }
+      .acc > summary::-webkit-details-marker { display: none; }
+      .acc > summary::after { content: ""; margin-left: auto; flex: none; width: 7px; height: 7px; border-right: 2px solid var(--muted-foreground); border-bottom: 2px solid var(--muted-foreground); transform: rotate(-45deg); transition: transform .15s; }
+      .acc[open] > summary { border-bottom: 1px solid var(--border); background: var(--muted); }
+      .acc[open] > summary::after { transform: rotate(45deg); }
+      .acc-body { display: grid; gap: 8px; padding: 10px 12px 12px; }
+      .acc-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .acc-sub { font-weight: 400; color: var(--muted-foreground); font-size: 12px; }
+      .acc.good > summary { color: var(--success-fg); } .acc.focus > summary { color: var(--danger-fg); }
+      .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-radius: 6px; }
+      .stat-row > div { padding: 8px 12px; border-right: 1px solid var(--border); }
+      .stat-row > div:last-child { border-right: 0; }
+      .stat-row .k { font-size: 11.5px; color: var(--muted-foreground); }
+      .stat-row .v { font-family: var(--mono); font-size: 20px; font-weight: 700; }
+      .stat-row .good { color: var(--success-fg); } .stat-row .bad { color: var(--danger-fg); } .stat-row .info { color: var(--accent-fg); }
+      .bar-track { height: 8px; border-radius: 2px; background: var(--muted-2); }
+      .bar-fill { border-radius: 2px; background: var(--accent); }
+      .bar-fill.c-good { background: var(--success); } .bar-fill.c-blue, .bar-fill.c-purple { background: var(--accent); }
+      .bar-fill.c-pink, .bar-fill.c-red { background: var(--danger); } .bar-fill.c-orange { background: var(--warn); }
+      .bar-row { padding: 2px 0; grid-template-columns: minmax(70px, 140px) 1fr 110px; }
+      .rank { width: 22px; height: 22px; border-radius: 4px; font-size: 12px; background: var(--danger); }
+      .rank.r2 { background: #e5730f; } .rank.r3 { background: var(--warn); } .rank.rn { background: var(--accent); }
+      .pill { height: 20px; padding: 0 8px; font-size: 11px; }
+      .pill.purple { background: var(--blue-soft); color: var(--blue-fg); }
+      .tip { border-radius: 4px; padding: 8px 10px; font-size: 12.5px; background: var(--warn-soft); color: #6b4300; }
+      .tip::before { content: "Not:"; font-weight: 700; }
+      .tip.plain::before { content: "Bilgi:"; }
+      .fb-row { gap: 3px; }
+      .fb-text { border-radius: 4px; padding: 7px 10px; font-size: 14px; line-height: 1.6; }
+      .fb-text del, .fb-text ins { border-radius: 2px; }
+      .quote { border-radius: 0; background: var(--muted); border-left-color: var(--accent); color: var(--foreground); font-style: normal; }
+      .vocab-form { border-radius: 6px; padding: 8px; gap: 6px; background: var(--muted); border: 1px solid var(--border); }
+      .vocab-form button { height: 32px; }
+      .vocab-word { font-size: 14px; color: var(--accent-fg); }
+      .suggest-chip { height: 22px; font-size: 12px; }
+      .study-num { width: 22px; height: 22px; border-radius: 4px; font-size: 12px; background: var(--accent); flex: none; }
+      .onboard { text-align: left; padding: 16px; border-radius: 6px; background: var(--muted); border: 1px solid var(--border); gap: 10px; }
+      .onboard-icon { display: none; }
+      .onboard-steps { gap: 8px; }
+      .onboard-step { border-radius: 6px; background: var(--card); border: 1px solid var(--border); padding: 8px 10px; }
+      .loader-card { border-radius: 6px; padding: 14px; background: var(--muted); border: 1px solid var(--border); gap: 12px; }
+      .loader-progress .bar-track { height: 8px; background: var(--card); border: 1px solid var(--border); }
+      .loader-progress .bar-fill { background: var(--accent); }
+      .loader-progress .bar-fill::after { display: none; }
+      .loader-steps li { border-radius: 4px; background: var(--card); padding: 6px 10px; }
+      .loader-steps li.active { box-shadow: none; outline: 1px solid var(--accent); }
+      .loader-steps li.done::before { background: var(--success); border-color: var(--success); }
+      .skeleton { display: none; }
+      .card-error { border-radius: 6px; border: 1px solid var(--danger); border-top-width: 1px; background: var(--danger-soft); }
+      .drawer, .fix-pop, .toast, .privacy-dialog, .ui-select-content { border-radius: 6px; box-shadow: none; border: 1px solid var(--input); }
+      .toast { border-left-width: 3px; }
+      .privacy-dialog { border-radius: 8px; }
+      mark.err { background: rgba(217,45,32,.14); }
+      .msg.me mark.err { background: #fff; color: var(--danger-fg); text-decoration-color: var(--danger); }
+      @media (max-width: 900px) { .app { grid-template-columns: minmax(0, 1fr); } .tab { flex-direction: row; height: 38px; } }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <aside class="sidebar settings" aria-label="Ayarlar">
+          <div class="brand">
+            <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 8v8M12 5v14M17 9v6"/></svg></div>
+            <div><h1>Ders Akışı</h1><p>Canlı ders, hatalar ve kelimeler</p></div>
+          </div>
+          <div class="tabs" role="tablist">
+            <button class="tab" role="tab" type="button" data-tab="lesson" aria-selected="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg><span>Ders</span></button>
+          <section class="panel" data-panel="lesson">
+            <div class="fields two">
+              <label>Ders türü
+                <select id="lessonType"><option value="mentor">Mentor / öğretmen</option><option value="friend">Arkadaş</option></select>
+              </label>
+              <label>Karşı taraf
+                <select id="maxSpeakers"><option value="1" selected>1 kişi</option><option value="2">2 kişi</option><option value="3">3 kişi</option><option value="4">4 kişi</option><option value="5">5 kişi</option></select>
+              </label>
+              <label id="friendNameWrap" class="friend-name" hidden>Arkadaşının adı
+                <input id="friendName" type="text" placeholder="Örn. Nazar" autocomplete="off" />
+              </label>
+            </div>
+            <div class="claude-account">
+              <div><strong>Claude Sonnet 5</strong><small id="claudeAuthStatus" role="status">Hesap kontrol ediliyor…</small></div>
+              <div class="claude-actions">
+                <button class="secondary" id="claudeLogin" type="button" hidden>Bağlan</button>
+                <button class="danger-ghost" id="claudeLogout" type="button" hidden>Çıkış yap</button>
+              </div>
+            </div>
+            <div class="actions">
+              <button id="start" type="button">Dersi başlat</button>
+              <button class="secondary" id="stop" type="button" disabled>Bitir</button>
+              <button class="secondary wide" id="copy" type="button">Transkripti kopyala</button>
+              <button class="secondary wide" id="importTranscript" type="button">Transkript aktar (.md / .txt)</button>
+              <input id="transcriptFile" type="file" accept=".md,.txt,text/markdown,text/plain" hidden />
+              <small id="importStatus" class="note" aria-live="polite"></small>
+              <button class="secondary wide" id="analyze" type="button">Sonnet 5 ile dersi analiz et</button>
+              <button class="secondary wide" id="copyAnalysis" type="button">Ders koçu agent’ını kopyala</button>
+            </div>
+            <div class="mini"><span>Süre <b id="lessonDuration">00:00</b></span><span>Bu ders <b id="lessonCostMini">$0.000</b></span></div>
+            <p class="note" id="deviceSummary">Cihaz seçilmedi. <strong>Cihazlar</strong> sekmesinden bul.</p>
+          </section>
+            <button class="tab" role="tab" type="button" data-tab="devices" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg><span>Cihazlar</span></button>
+          <section class="panel" data-panel="devices" hidden>
+            <div class="fields">
+              <label>Bilgisayar sesi · Karşı taraf
+                <select id="teacherDevice"><option value="">Önce cihazlara izin ver</option></select>
+              </label>
+              <label>Mikrofon · Ben
+                <select id="micDevice"><option value="">Önce cihazlara izin ver</option></select>
+              </label>
+            </div>
+            <button class="secondary" id="refresh" type="button">Cihazları bul</button>
+            <p class="note box" id="hint"><strong>Mac:</strong> Ses çıkışını “Multi-Output Device” yap; içine kulaklığını ve BlackHole’u ekle. Karşı taraf cihazında <strong>BlackHole 2ch</strong> seç. Kulaklık kullan ki mikrofon karşı tarafı tekrar almasın.</p>
+          </section>
+            <button class="tab" role="tab" type="button" data-tab="words" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg><span>Kelimeler</span></button>
+          <section class="panel" data-panel="words" hidden>
+            <p class="note">Ses tanıma bu isim ve kelimeleri doğru yazmaya çalışır. Yeni kelimeler dersi bir sonraki başlatışta devreye girer.</p>
+            <input id="context" type="hidden" value="Berat, Dokploy" />
+            <div class="add-row">
+              <input id="termInput" type="text" placeholder="Kelime ekle, ör. Vercel" autocomplete="off" />
+              <button class="secondary" id="termAdd" type="button">Ekle</button>
+            </div>
+            <div class="chips" id="termList"></div>
+            <div class="separator"></div>
+            <p class="section-title">Bu dersteki düzeltmeler</p>
+            <ul class="fix-list" id="fixList"></ul>
+          </section>
+            <button class="tab" role="tab" type="button" data-tab="cost" aria-selected="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.6 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/></svg><span>Maliyet</span></button>
+          <section class="panel" data-panel="cost" hidden>
+            <div class="stats">
+              <div class="stat"><div class="k">Bu ders</div><div class="v" id="costLesson">$0.000</div><div class="s" id="costLessonTime">0 dk</div></div>
+              <div class="stat"><div class="k">Bu ay</div><div class="v" id="costMonth">$0.000</div><div class="s" id="costMonthTime">0 dk</div></div>
+              <div class="stat wide"><div class="k">Toplam (bu tarayıcıda)</div><div class="v" id="costTotal">$0.000</div><div class="s" id="costTotalTime">0 dk</div></div>
+              <div class="stat"><div class="k">Sonnet · bu analiz</div><div class="v" id="sonnetLastCost">—</div><div class="s" id="sonnetLastUsage">Henüz analiz yok</div></div>
+              <div class="stat"><div class="k">Sonnet · toplam raporlanan</div><div class="v" id="sonnetTotalCost">$0.000</div><div class="s" id="sonnetTotalAnalyses">0 analiz</div></div>
+            </div>
+            <p class="section-title">Saatlik ücretler (USD)</p>
+            <div class="fields">
+              <label class="rate-row">Model · Universal-3.5 Pro Realtime <input id="rateBase" type="number" step="0.01" min="0" value="0.45" /></label>
+              <label class="rate-row">Prompting ek ücreti <input id="ratePrompt" type="number" step="0.01" min="0" value="0.05" /></label>
+              <label class="rate-row">Konuşmacı ayrımı (2+ kişi) <input id="rateDiar" type="number" step="0.01" min="0" value="0.12" /></label>
+            </div>
+            <p class="note">Tahmindir. AssemblyAI bağlantının açık kaldığı süreyi ücretlendirir; uygulama iki akış açar (karşı taraf + mikrofon), ikisi de sayılır. Kesin tutar AssemblyAI panelindedir.</p>
+            <button class="danger-ghost" id="costReset" type="button">Sayaçları sıfırla</button>
+          </section>
+          </div>
+      </aside>
+
+      <main class="main">
+        <section class="card chat" aria-live="polite">
+          <div class="chat-header">
+            <div class="topbar-left">
+              <button class="secondary menu-btn" id="menuToggle" type="button" aria-label="Kenar çubuğunu aç/kapat" title="Kenar çubuğu"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></button>
+              <div><h2>Ders konuşması</h2><p>Yanlış duyulan kelimeyi seç → düzelt · İsme tıklayıp adını değiştir</p></div>
+            </div>
+            <div class="top-right"><span class="badge" id="count">0 mesaj</span><button class="cost-pill" id="costPill" type="button" title="Maliyet ayrıntıları"><span>Bu ders</span>$0.000</button><div class="status" id="status">Hazır</div><div class="view-switch" role="tablist" aria-label="Görünüm"><button id="showChat" type="button" role="tab" aria-selected="true">Konuşma</button><button id="showInsights" type="button" role="tab" aria-selected="false">İçgörüler</button></div></div>
+          </div>
+          <div id="conversation" class="log">
+            <div class="empty">
+              <div class="empty-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+              <strong>Henüz mesaj yok</strong>
+              Ders başlayınca karşı taraf konuşmacılara ayrılır, sen sağda “Ben” olarak görünürsün.
+            </div>
+          </div>
+          <button class="secondary jump" id="jump" type="button" hidden>↓ Yeni mesajlar</button>
+          <div id="insights" class="insights" hidden>
+            <button type="button" class="history-trigger" id="openHistoryDrawer" aria-haspopup="dialog">
+              <span class="history-trigger-text"><span class="k">Ders geçmişi</span><span class="v" id="historyTriggerLabel">Canlı ders</span></span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+            <div class="insight-tabs" role="tablist" aria-label="Ders içgörüleri">
+              <button type="button" data-insight-tab="recap" aria-selected="true">Özet</button>
+              <button type="button" data-insight-tab="progress" aria-selected="false">Hata sıralaması</button>
+              <button type="button" data-insight-tab="feedback" aria-selected="false">Düzeltmeler</button>
+              <button type="button" data-insight-tab="vocabulary" aria-selected="false">Kelimeler</button>
+              <button type="button" data-insight-tab="study" aria-selected="false">Çalışma planı</button>
+            </div>
+            <div id="insightContent" class="insight-panel"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="toasts" class="toasts" aria-live="polite"></div>
+    <div class="fix-pop" id="fixPop" role="dialog" aria-label="Kelimeyi düzelt" hidden>
+      <div class="fix-title">Ses tanıma hatasını düzelt</div>
+      <div class="fix-from">Duyulan: <code id="fixFrom"></code></div>
+      <input id="fixInput" type="text" placeholder="Doğrusu, ör. Dokploy" autocomplete="off" />
+      <label class="fix-check"><input type="checkbox" id="fixAll" checked /> Tüm transkriptte değiştir</label>
+      <label class="fix-check"><input type="checkbox" id="fixKeyterm" checked /> Özel kelimelere ekle</label>
+      <div class="fix-actions"><button class="secondary" id="fixCancel" type="button">Vazgeç</button><button id="fixSave" type="button">Düzelt</button></div>
+    </div>
+    <div class="drawer-overlay" id="historyDrawerOverlay" hidden></div>
+    <aside class="drawer" id="historyDrawer" aria-label="Eski dersler" hidden>
+      <div class="drawer-header">
+        <h3>Obsidian’dan eski dersler</h3>
+        <button class="drawer-close" id="closeHistoryDrawer" type="button" aria-label="Kapat">✕</button>
+      </div>
+      <div class="drawer-body">
+        <label for="historyDate">Ders tarihi
+          <select id="historyDate"><option value="">Tarihleri yüklüyorum…</option></select>
+        </label>
+        <button id="loadHistory" class="secondary" type="button">Günün derslerini getir</button>
+        <button id="clearHistory" class="secondary" type="button" hidden>Canlı derse dön</button>
+        <div id="historyStatus" class="insight-source-status" role="status">Bir gün seç; o günün tüm kayıtları saat ve konuşmacılarıyla yüklensin.</div>
+        <div id="historyLessons" class="history-lessons"></div>
+      </div>
+    </aside>
+    <dialog id="privacyDialog" class="privacy-dialog" aria-labelledby="privacyTitle">
+      <h2 id="privacyTitle">Claude’a hangi konuşma gönderilsin?</h2>
+      <p>Seçtiğin konuşma ile Obsidian’daki English Progress, Error Library ve Vocabulary notları analiz için Anthropic’e gönderilir. Arkadaşının veya mentorun sözlerini göndermek istemiyorsan yalnızca kendi konuşmanı seç.</p>
+      <div class="actions">
+        <button id="sendMine" type="button">Yalnızca benim sözlerim</button>
+        <button id="sendAll" class="secondary" type="button">Tüm konuşma — diğer kişiler dahil</button>
+        <button id="cancelSend" class="secondary" type="button">Vazgeç</button>
+      </div>
+    </dialog>
+    <dialog id="logoutDialog" class="privacy-dialog" aria-labelledby="logoutTitle">
+      <h2 id="logoutTitle">Claude hesabından çıkış yapılsın mı?</h2>
+      <p>Bu işlem yalnızca bu sayfayı değil, bilgisayardaki Claude CLI oturumunu da kapatır. Tekrar analiz yapmak için yeniden bağlanman gerekir.</p>
+      <div class="actions">
+        <button id="confirmLogout" class="danger-ghost" type="button">Evet, çıkış yap</button>
+        <button id="cancelLogout" class="secondary" type="button">Vazgeç</button>
+      </div>
+    </dialog>
+
+    <script>
+      const teacherDevice = document.querySelector('#teacherDevice');
+      const micDevice = document.querySelector('#micDevice');
+      const maxSpeakers = document.querySelector('#maxSpeakers');
+      const lessonType = document.querySelector('#lessonType');
+      const friendNameWrap = document.querySelector('#friendNameWrap');
+      const friendName = document.querySelector('#friendName');
+      const context = document.querySelector('#context');
+      const refresh = document.querySelector('#refresh');
+      const start = document.querySelector('#start');
+      const stop = document.querySelector('#stop');
+      const copy = document.querySelector('#copy');
+      const importTranscript = document.querySelector('#importTranscript');
+      const transcriptFile = document.querySelector('#transcriptFile');
+      const importStatus = document.querySelector('#importStatus');
+      const analyze = document.querySelector('#analyze');
+      const claudeAuthStatus = document.querySelector('#claudeAuthStatus');
+      const claudeLogin = document.querySelector('#claudeLogin');
+      const claudeLogout = document.querySelector('#claudeLogout');
+      const logoutDialog = document.querySelector('#logoutDialog');
+      const confirmLogout = document.querySelector('#confirmLogout');
+      const cancelLogout = document.querySelector('#cancelLogout');
+      const privacyDialog = document.querySelector('#privacyDialog');
+      const sendMine = document.querySelector('#sendMine');
+      const sendAll = document.querySelector('#sendAll');
+      const cancelSend = document.querySelector('#cancelSend');
+      const copyAnalysis = document.querySelector('#copyAnalysis');
+      const showChat = document.querySelector('#showChat');
+      const showInsights = document.querySelector('#showInsights');
+      const insights = document.querySelector('#insights');
+      const insightContent = document.querySelector('#insightContent');
+      const insightTabs = [...document.querySelectorAll('[data-insight-tab]')];
+      const historyDate = document.querySelector('#historyDate');
+      const loadHistory = document.querySelector('#loadHistory');
+      const clearHistory = document.querySelector('#clearHistory');
+      const historyStatus = document.querySelector('#historyStatus');
+      const historyLessonsView = document.querySelector('#historyLessons');
+      const openHistoryDrawer = document.querySelector('#openHistoryDrawer');
+      const closeHistoryDrawer = document.querySelector('#closeHistoryDrawer');
+      const historyDrawer = document.querySelector('#historyDrawer');
+      const historyDrawerOverlay = document.querySelector('#historyDrawerOverlay');
+      const historyTriggerLabel = document.querySelector('#historyTriggerLabel');
+      const status = document.querySelector('#status');
+      const toasts = document.querySelector('#toasts');
+      const hint = document.querySelector('#hint');
+      const jump = document.querySelector('#jump');
+      const conversation = document.querySelector('#conversation');
+      const isWindows = /windows/i.test(navigator.userAgent);
+      const SYSTEM_AUDIO = '__system_audio__';
+      let vaultPath = isWindows ? 'Obsidian kasası' : '/Users/berat/english';
+      let stickToBottom = true;
+      const streams = [];
+      const messages = [];
+      const assemblyStreams = {};
+      let liveMicText = '';
+      let liveRemoteText = '';
+      let liveRemoteSpeaker = '?';
+      let running = false;
+      let currentInsightTab = 'recap';
+      let insightReport = null;
+      let historyLessons = [];
+      let historyLoadedDate = '';
+      let importedSession = null;
+      let lastInsightCostUsd = null;
+      let lastInsightSavedAs = '';
+      let lessonSaved = false;
+      let sonnetCostStore = { analyses: 0, totalUsd: 0, lastUsd: null };
+      let lastSonnetUsageLabel = sonnetCostStore.lastUsage || 'Henüz analiz yok';
+      try { sonnetCostStore = { ...sonnetCostStore, ...JSON.parse(localStorage.getItem('ders-akisi-sonnet-costs') || '{}') }; } catch {}
+      let claudeConnected = false;
+
+      function toast(text, type = 'info', duration = 3200) {
+        if (!text) return;
+        const item = document.createElement('div');
+        item.className = `toast ${type}`;
+        item.textContent = text;
+        toasts.append(item);
+        while (toasts.children.length > 4) toasts.firstElementChild.remove();
+        window.setTimeout(() => {
+          item.classList.add('leaving');
+          window.setTimeout(() => item.remove(), 220);
+        }, duration);
+      }
+      function message(text = '', type = 'warn') { toast(text, type, type === 'error' ? 5200 : 3600); }
+      function flash(button, text, ok = true, persist = false) {
+        if (!button.dataset.label) button.dataset.label = button.textContent;
+        window.clearTimeout(button._flashTimer);
+        button.textContent = text;
+        button.classList.remove('done', 'failed');
+        button.classList.add(ok ? 'done' : 'failed');
+        if (persist) return;
+        button._flashTimer = window.setTimeout(() => {
+          button.textContent = button.dataset.label;
+          button.classList.remove('done', 'failed');
+        }, 1800);
+      }
+      function setStatus(text, live = false) { status.textContent = text; status.classList.toggle('live', live); }
+      function label(device, fallback) { return device.label || fallback; }
+
+      function updateLessonType() {
+        friendNameWrap.hidden = lessonType.value !== 'friend';
+      }
+
+      function namesAndTerms() {
+        return [context.value.trim(), lessonType.value === 'friend' ? friendName.value.trim() : '']
+          .filter(Boolean).join(', ') || 'Berat';
+      }
+
+      async function populateDevices() {
+        message('');
+        try {
+          const permissionStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          permissionStream.getTracks().forEach(track => track.stop());
+          const devices = (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind === 'audioinput');
+          if (!devices.length) throw new Error('Ses giriş aygıtı bulunamadı.');
+          const options = devices.map((device, index) => `<option value="${device.deviceId}">${label(device, `Ses aygıtı ${index + 1}`)}</option>`).join('');
+          const systemOption = navigator.mediaDevices.getDisplayMedia
+            ? `<option value="${SYSTEM_AUDIO}">Sistem sesi (ekran paylaşımıyla)</option>` : '';
+          teacherDevice.innerHTML = isWindows ? systemOption + options : options + systemOption;
+          micDevice.innerHTML = options;
+          const loopbackPattern = /blackhole|stereo mix|stereo karışımı|cable output|vb-audio|voicemeeter/i;
+          const loopback = devices.find(device => loopbackPattern.test(device.label));
+          const microphone = devices.find(device => /macbook|microphone|mikrofon|mic|headset|kulaklık/i.test(device.label) && !loopbackPattern.test(device.label));
+          if (loopback) teacherDevice.value = loopback.deviceId;
+          else if (isWindows && systemOption) teacherDevice.value = SYSTEM_AUDIO;
+          if (microphone) micDevice.value = microphone.deviceId;
+          if (!loopback && !isWindows) message('BlackHole görünmüyor. Kurulumdan sonra “Cihazları bul”a tekrar bas.');
+          return true;
+        } catch (error) { message(`Mikrofon izni gerekli: ${error.message}`, 'error'); return false; }
+      }
+
+      function isNearBottom() {
+        return conversation.scrollHeight - conversation.scrollTop - conversation.clientHeight < 60;
+      }
+
+      function scrollToBottom() {
+        conversation.scrollTop = conversation.scrollHeight;
+        stickToBottom = true;
+        jump.hidden = true;
+      }
+
+      const EMPTY_STATE = conversation.innerHTML;
+      const speakerColors = new Map();
+      const aliases = new Map();
+      const corrections = [];
+      let messageSeq = 0;
+      let renderLocked = false;
+      let renderPending = false;
+      function partnerName() {
+        return lessonType.value === 'friend' ? (friendName.value.trim() || 'Arkadaş') : 'Öğretmen';
+      }
+      function displayName(raw) {
+        if (raw === 'Ben') return 'Ben';
+        if (aliases.has(raw)) return aliases.get(raw);
+        if (maxSpeakers.value === '1') return partnerName();
+        return raw;
+      }
+      function initials(name) {
+        if (name === 'Ben') return 'B';
+        if (!/^Konuşmacı/.test(name)) return name.trim().slice(0, 1).toLocaleUpperCase('tr-TR') || '?';
+        const tail = name.replace(/^Konuşmacı\s*/, '').trim();
+        return !tail || /pending|\?/i.test(tail) ? '?' : tail.slice(0, 2).toUpperCase();
+      }
+      function colorClass(name) {
+        if (name === 'Ben' || (/^Konuşmacı/.test(name) && /pending|\?/i.test(name))) return '';
+        if (!speakerColors.has(name)) speakerColors.set(name, `c${(speakerColors.size % 5) + 1}`);
+        return speakerColors.get(name);
+      }
+      function messageElement({ raw, name, text, time, id, edited = false, cont = false, live = false }) {
+        raw = raw || name;
+        const me = raw === 'Ben';
+        const row = document.createElement('div');
+        row.className = `msg${me ? ' me' : ''}${cont ? ' cont' : ''}${live ? ' live' : ''}`;
+        const avatar = document.createElement('div');
+        avatar.className = `avatar ${colorClass(name === raw ? raw : name)}`;
+        avatar.textContent = initials(name);
+        const body = document.createElement('div');
+        body.className = 'msg-body';
+        if (!cont) {
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          const who = document.createElement('span');
+          who.className = 'name';
+          who.textContent = name;
+          if (!me && !live) {
+            who.classList.add('editable');
+            who.title = 'Adını değiştirmek için tıkla';
+            who.addEventListener('click', () => startRename(who, raw));
+          }
+          meta.append(who);
+          if (live) {
+            const pill = document.createElement('span');
+            pill.className = 'live-pill';
+            pill.textContent = 'konuşuyor';
+            meta.append(pill);
+          } else {
+            const when = document.createElement('span');
+            when.className = 'time';
+            when.textContent = time;
+            meta.append(when);
+          }
+          body.append(meta);
+        }
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        bubble.textContent = text;
+        if (id) bubble.dataset.id = id;
+        if (edited) {
+          const mark = document.createElement('span');
+          mark.className = 'edited-mark';
+          mark.textContent = '✎ düzeltildi';
+          bubble.append(mark);
+        }
+        body.append(bubble);
+        row.append(avatar, body);
+        return row;
+      }
+
+      function highlightErrors(bubble, text) {
+        const items = insightReport?.feedback || [];
+        if (!items.length || !bubble?.firstChild || bubble.firstChild.nodeType !== 3) return;
+        const lower = text.toLowerCase();
+        const ranges = [];
+        items.forEach(item => {
+          const needle = String(item.original || '').trim().toLowerCase();
+          if (needle.length < 3) return;
+          const at = lower.indexOf(needle);
+          if (at >= 0) ranges.push({ start: at, end: at + needle.length, item });
+        });
+        if (!ranges.length) return;
+        ranges.sort((a, b) => a.start - b.start);
+        const fragment = document.createDocumentFragment();
+        let cursor = 0;
+        ranges.forEach(range => {
+          if (range.start < cursor) return;
+          fragment.append(document.createTextNode(text.slice(cursor, range.start)));
+          const mark = document.createElement('mark');
+          mark.className = 'err';
+          mark.textContent = text.slice(range.start, range.end);
+          mark.title = `Doğrusu: ${range.item.correction}`;
+          fragment.append(mark);
+          cursor = range.end;
+        });
+        fragment.append(document.createTextNode(text.slice(cursor)));
+        bubble.firstChild.replaceWith(fragment);
+      }
+
+      function renderConversation() {
+        if (renderLocked) { renderPending = true; return; }
+        renderPending = false;
+        const previousScroll = conversation.scrollTop;
+        messages.sort((a, b) => a.happenedAt - b.happenedAt);
+        conversation.replaceChildren();
+        if (!messages.length && !liveRemoteText && !liveMicText) {
+          conversation.innerHTML = EMPTY_STATE;
+          document.querySelector('#count').textContent = '0 mesaj';
+          return;
+        }
+        let previous = null;
+        messages.forEach(item => {
+          const cont = previous && previous.speakerName === item.speakerName && item.happenedAt - previous.happenedAt < 120000;
+          const rowElement = messageElement({
+            raw: item.speakerName,
+            name: displayName(item.speakerName),
+            id: item.id,
+            edited: item.edited,
+            text: item.text,
+            time: new Date(item.happenedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+            cont
+          });
+          if (item.speakerName === 'Ben') highlightErrors(rowElement.querySelector('.bubble'), item.text);
+          conversation.append(rowElement);
+          previous = item;
+        });
+        if (liveRemoteText) conversation.append(messageElement({ raw: `Konuşmacı ${liveRemoteSpeaker}`, name: displayName(`Konuşmacı ${liveRemoteSpeaker}`), text: liveRemoteText, live: true }));
+        if (liveMicText) conversation.append(messageElement({ name: 'Ben', text: liveMicText, live: true }));
+        document.querySelector('#count').textContent = `${messages.length} mesaj`;
+        if (stickToBottom) scrollToBottom();
+        else { conversation.scrollTop = previousScroll; jump.hidden = false; }
+      }
+
+      function addMessage(speakerName, text, happenedAt) {
+        const cleanText = text.trim();
+        if (!cleanText || !/[\p{L}\p{N}]/u.test(cleanText)) return;
+        messages.push({ id: String(++messageSeq), speakerName, text: cleanText, happenedAt, edited: false });
+        renderConversation();
+      }
+
+      function parseImportedTranscript(markdown) {
+        const frontmatter = markdown.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/);
+        const meta = {};
+        for (const line of (frontmatter?.[1] || '').split(/\r?\n/)) {
+          const match = line.match(/^([\w-]+):\s*(.*?)\s*$/);
+          if (match) meta[match[1]] = match[2].replace(/^(["'])(.*)\1$/, '$2');
+        }
+        const body = markdown.replace(/^---\s*\r?\n[\s\S]*?\r?\n---\s*\r?\n?/, '');
+        const parsed = [];
+        let current = null;
+        const finish = () => {
+          const text = current?.text.trim();
+          if (text) parsed.push({ ...current, text });
+          current = null;
+        };
+        for (const line of body.split(/\r?\n/)) {
+          const callout = line.match(/^>\s*\[!([^\]]+)\]\s*(.*?)\s*·\s*(\d{1,2}:\d{2})\s*$/);
+          if (callout) {
+            finish();
+            const speaker = /^ben$/i.test(callout[1]) || /^ben$/i.test(callout[2]) ? 'Ben' : callout[2].trim();
+            current = { speaker, time: callout[3], text: '' };
+          } else if (current && line.startsWith('>')) {
+            current.text += `${current.text ? '\n' : ''}${line.replace(/^>\s?/, '')}`;
+          } else if (current && !line.trim()) finish();
+          else if (current && line.trim() && !line.startsWith('>')) finish();
+        }
+        finish();
+        if (!parsed.length) throw new Error('Bu dosyada tanınan konuşmacı satırı bulunamadı. Obsidian transkript Markdown veya düz metin (.txt) seç.');
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(meta.date || '') ? meta.date : new Date().toISOString().slice(0, 10);
+        const start = /^\d{1,2}:\d{2}$/.test(meta.start || '') ? meta.start : parsed[0].time;
+        const end = /^\d{1,2}:\d{2}$/.test(meta.end || '') ? meta.end : parsed[parsed.length - 1].time;
+        return {
+          messages: parsed.map(item => {
+            const [hours, minutes] = item.time.split(':').map(Number);
+            const [year, month, day] = date.split('-').map(Number);
+            return { ...item, happenedAt: new Date(year, month - 1, day, hours, minutes).getTime() };
+          }),
+          session: {
+            date, start, end, month: meta.month || date.slice(0, 7), week: meta.week || '',
+            type: meta.lesson_type === 'friend' ? 'friend' : 'mentor',
+            partner: meta.partner || (meta.lesson_type === 'friend' ? 'Arkadaş' : 'Mentor'),
+            durationMin: Number(meta.duration_min) || 0, costUsd: Number(meta.cost_usd) || 0
+          }
+        };
+      }
+
+      async function importTranscriptFile(file) {
+        if (!file) return;
+        if (running) { toast('Önce canlı dersi bitir; sonra transkript aktar.', 'warn'); return; }
+        if (messages.length && !window.confirm('Mevcut konuşma ekranı temizlenip seçtiğin transkript yüklensin mi?')) return;
+        try {
+          const parsed = parseImportedTranscript(await file.text());
+          messages.splice(0, messages.length);
+          corrections.splice(0, corrections.length);
+          messageSeq = 0;
+          aliases.clear();
+          importedSession = parsed.session;
+          lessonType.value = parsed.session.type;
+          lessonType.dispatchEvent(new Event('change', { bubbles: true }));
+          friendName.value = parsed.session.type === 'friend' ? parsed.session.partner : '';
+          maxSpeakers.value = String(Math.min(5, Math.max(1, new Set(parsed.messages.filter(item => item.speaker !== 'Ben').map(item => item.speaker)).size)));
+          maxSpeakers.dispatchEvent(new Event('change', { bubbles: true }));
+          const importedDuration = parsed.session.durationMin * 60_000;
+          lessonClosedUsd = parsed.session.costUsd;
+          lessonClosedSec = importedDuration / 1000;
+          lessonStartedAt = importedDuration ? Date.now() - importedDuration : 0;
+          lessonEndedAt = importedDuration ? Date.now() : 0;
+          saveSettings();
+          parsed.messages.forEach(item => addMessage(item.speaker, item.text, item.happenedAt));
+          lessonSaved = true;
+          updateCost();
+          importStatus.textContent = `${file.name} · ${parsed.messages.length} konuşma · ${parsed.session.date} ${parsed.session.start}–${parsed.session.end}`;
+          setStatus('Transkript aktarıldı');
+          renderConversation();
+          toast('Transkript yüklendi. Şimdi Sonnet 5 ile analiz edebilirsin.', 'success', 5000);
+        } catch (error) {
+          importStatus.textContent = error.message;
+          toast(error.message, 'error', 5500);
+        } finally { transcriptFile.value = ''; }
+      }
+
+      function wordCount(text) {
+        return (text.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) || []).length;
+      }
+
+      function speakingStats() {
+        const counts = new Map();
+        messages.forEach(item => { const name = displayName(item.speakerName); counts.set(name, (counts.get(name) || 0) + wordCount(item.text)); });
+        const totalWords = [...counts.values()].reduce((sum, count) => sum + count, 0);
+        return [...counts.entries()]
+          .map(([speaker, words]) => ({ speaker, words, share: totalWords ? Math.round((words / totalWords) * 100) : 0 }))
+          .sort((a, b) => b.words - a.words);
+      }
+
+      function speakingDistributionMarkdown() {
+        return speakingStats().map(item => `- ${item.speaker}: ${item.words} kelime, konuşmanın %${item.share}'i`).join('\n');
+      }
+
+      function node(tag, text, className) {
+        const element = document.createElement(tag);
+        if (text !== undefined) element.textContent = text;
+        if (className) element.className = className;
+        return element;
+      }
+
+      function insightCard(title, body, metric = false) {
+        const card = node('div', undefined, 'insight-card');
+        card.append(node('h4', title), node(metric ? 'strong' : 'p', body, metric ? 'insight-metric' : ''));
+        return card;
+      }
+
+      function insightList(items) {
+        const list = node('ul', undefined, 'insight-list');
+        (items || []).forEach(item => list.append(node('li', item)));
+        return list;
+      }
+
+      function formatHistoryDate(date) {
+        const [year, month, day] = date.split('-').map(Number);
+        return new Date(year, month - 1, day).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+
+      function updateHistoryTrigger() {
+        historyTriggerLabel.textContent = historyLoadedDate
+          ? `${formatHistoryDate(historyLoadedDate)} · ${historyLessons.length} ders`
+          : 'Canlı ders';
+      }
+
+      function openDrawer() {
+        historyDrawer.hidden = false;
+        historyDrawerOverlay.hidden = false;
+        requestAnimationFrame(() => { historyDrawer.classList.add('open'); historyDrawerOverlay.classList.add('open'); });
+      }
+      function closeDrawer() {
+        historyDrawer.classList.remove('open');
+        historyDrawerOverlay.classList.remove('open');
+        window.setTimeout(() => { historyDrawer.hidden = true; historyDrawerOverlay.hidden = true; }, 220);
+      }
+      openHistoryDrawer.addEventListener('click', openDrawer);
+      closeHistoryDrawer.addEventListener('click', closeDrawer);
+      historyDrawerOverlay.addEventListener('click', closeDrawer);
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && historyDrawer.classList.contains('open')) closeDrawer();
+      });
+
+      async function loadLessonDates() {
+        try {
+          const response = await fetch('/api/lesson-dates');
+          if (!response.ok) throw new Error('Tarihler okunamadı.');
+          const { dates = [] } = await response.json();
+          historyDate.replaceChildren();
+          if (!dates.length) {
+            historyDate.add(new Option('Kayıtlı ders bulunamadı', ''));
+            historyStatus.textContent = 'Önce bir dersi bitir; transkript otomatik olarak Obsidian’a kaydedilir.';
+            return;
+          }
+          historyDate.add(new Option('Bir tarih seç', ''));
+          dates.forEach(date => historyDate.add(new Option(formatHistoryDate(date), date)));
+          historyDate.value = dates[0];
+          historyStatus.textContent = `${dates.length} farklı günde kayıtlı ders var.`;
+        } catch (error) {
+          historyStatus.textContent = error.message;
+        }
+      }
+
+      async function fetchHistoryForDate() {
+        const date = historyDate.value;
+        if (!date) { historyStatus.textContent = 'Önce bir tarih seç.'; return; }
+        loadHistory.disabled = true;
+        historyStatus.textContent = `${formatHistoryDate(date)} kayıtları okunuyor…`;
+        historyLessonsView.replaceChildren();
+        try {
+          const response = await fetch(`/api/lessons?date=${encodeURIComponent(date)}`);
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Dersler okunamadı.');
+          historyLessons = result.lessons || [];
+          historyLoadedDate = date;
+          if (!historyLessons.length) {
+            historyStatus.textContent = `${formatHistoryDate(date)} için transkript bulunamadı.`;
+            clearHistory.hidden = true;
+            historyLoadedDate = '';
+            updateHistoryTrigger();
+            return;
+          }
+          historyLessons.forEach((lesson, index) => {
+            const details = document.createElement('details');
+            details.className = 'history-lesson';
+            details.open = true;
+            const summary = node('summary', `${lesson.start || 'Saat yok'}${lesson.end ? `–${lesson.end}` : ''} · ${lesson.lessonType === 'friend' ? `Arkadaş: ${lesson.partner || 'isimsiz'}` : 'Mentor'} · ${lesson.words} kelime`);
+            const body = node('div', undefined, 'history-lesson-body');
+            lesson.messages.forEach(message => body.append(node('p', `${message.speaker} · ${message.time}: ${message.text}`)));
+            if (!lesson.messages.length) body.append(node('p', `Bu transkript otomatik konuşmacı etiketlerini içermiyor: ${lesson.file}`));
+            details.append(summary, body);
+            historyLessonsView.append(details);
+          });
+          const totalWords = historyLessons.reduce((sum, lesson) => sum + lesson.words, 0);
+          historyStatus.textContent = `${formatHistoryDate(date)} · ${historyLessons.length} ders · ${totalWords} kelime. Analiz seçilen günün tüm derslerini birlikte kullanır.`;
+          clearHistory.hidden = false;
+          updateHistoryTrigger();
+        } catch (error) {
+          historyLessons = [];
+          historyLoadedDate = '';
+          historyStatus.textContent = error.message;
+          updateHistoryTrigger();
+        } finally {
+          loadHistory.disabled = false;
+        }
+      }
+
+      function clearLoadedHistory() {
+        historyLessons = [];
+        historyLoadedDate = '';
+        historyLessonsView.replaceChildren();
+        clearHistory.hidden = true;
+        historyStatus.textContent = 'Canlı transkript seçili. Analiz düğmesi mevcut dersi kullanacak.';
+        updateHistoryTrigger();
+      }
+
+      function transcriptFromHistory(scope) {
+        return historyLessons.map(lesson => {
+          const lines = lesson.messages
+            .filter(item => scope === 'all' || item.speaker === 'Ben')
+            .map(item => `${item.speaker} · ${item.time}\n${item.text}`);
+          return `DERS ${lesson.date} ${lesson.start || ''} · ${lesson.lessonType === 'friend' ? `Arkadaş ${lesson.partner || ''}` : 'Mentor'}\n${lines.join('\n\n')}`;
+        }).filter(section => section.trim()).join('\n\n---\n\n');
+      }
+
+      function historySpeakingStats(scope) {
+        const counts = new Map();
+        historyLessons.forEach(lesson => lesson.messages.forEach(item => {
+          if (scope === 'mine' && item.speaker !== 'Ben') return;
+          counts.set(item.speaker, (counts.get(item.speaker) || 0) + wordCount(item.text));
+        }));
+        const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+        return [...counts].map(([speaker, words]) => ({ speaker, words, share: total ? Math.round(words / total * 100) : 0 })).sort((a, b) => b.words - a.words);
+      }
+
+      function recordSonnetCost(costUsd, usage = null) {
+        sonnetCostStore.analyses += 1;
+        sonnetCostStore.lastUsd = typeof costUsd === 'number' ? costUsd : null;
+        if (typeof costUsd === 'number') sonnetCostStore.totalUsd += costUsd;
+        const inputTokens = Number(usage?.input_tokens) || 0;
+        const outputTokens = Number(usage?.output_tokens) || 0;
+        lastSonnetUsageLabel = inputTokens || outputTokens ? `${(inputTokens + outputTokens).toLocaleString('tr-TR')} token · CLI bildirimi` : 'Claude CLI kullanım bildirimi';
+        sonnetCostStore.lastUsage = lastSonnetUsageLabel;
+        try { localStorage.setItem('ders-akisi-sonnet-costs', JSON.stringify(sonnetCostStore)); } catch {}
+        updateSonnetCostDisplay();
+      }
+
+      function updateSonnetCostDisplay() {
+        document.querySelector('#sonnetLastCost').textContent = typeof sonnetCostStore.lastUsd === 'number' ? `$${sonnetCostStore.lastUsd.toFixed(4)}` : '—';
+        document.querySelector('#sonnetLastUsage').textContent = sonnetCostStore.analyses ? lastSonnetUsageLabel : 'Henüz analiz yok';
+        document.querySelector('#sonnetTotalCost').textContent = `$${Number(sonnetCostStore.totalUsd || 0).toFixed(4)}`;
+        document.querySelector('#sonnetTotalAnalyses').textContent = `${Number(sonnetCostStore.analyses || 0)} analiz`;
+      }
+
+      function switchView(view) {
+        const isInsight = view === 'insights';
+        conversation.hidden = isInsight;
+        insights.hidden = !isInsight;
+        jump.hidden = true;
+        showChat.setAttribute('aria-selected', String(!isInsight));
+        showInsights.setAttribute('aria-selected', String(isInsight));
+      }
+
+      const BAR_COLORS = ['c-purple', 'c-blue', 'c-pink', 'c-orange', 'c-good'];
+      const PILL_COLORS = ['red', 'pink', 'purple', 'blue', 'green'];
+      function pillColor(text = '') {
+        let hash = 0;
+        for (const char of text) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+        return PILL_COLORS[hash % PILL_COLORS.length];
+      }
+
+      function barRow(label, percent, valueText, color) {
+        const row = node('div', undefined, 'bar-row');
+        const track = node('div', undefined, 'bar-track');
+        const fill = node('span', undefined, `bar-fill ${color}`);
+        fill.style.width = '0%';
+        track.append(fill);
+        row.append(node('span', label, 'bar-label'), track, node('span', valueText, 'bar-value'));
+        const width = percent > 0 ? Math.max(3, Math.min(100, percent)) : 0;
+        requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = `${width}%`; }));
+        return row;
+      }
+
+      function wordDiff(original, correction) {
+        const norm = word => word.toLowerCase().replace(/[^\p{L}\p{N}'’]/gu, '');
+        const A = String(original || '').split(/\s+/).filter(Boolean);
+        const B = String(correction || '').split(/\s+/).filter(Boolean);
+        const dp = Array.from({ length: A.length + 1 }, () => new Array(B.length + 1).fill(0));
+        for (let i = A.length - 1; i >= 0; i--) for (let j = B.length - 1; j >= 0; j--) {
+          dp[i][j] = norm(A[i]) === norm(B[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+        }
+        const keepA = new Set(); const keepB = new Set();
+        let i = 0; let j = 0;
+        while (i < A.length && j < B.length) {
+          if (norm(A[i]) === norm(B[j])) { keepA.add(i); keepB.add(j); i++; j++; }
+          else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
+          else j++;
+        }
+        return {
+          a: A.map((word, index) => ({ word, changed: !keepA.has(index) })),
+          b: B.map((word, index) => ({ word, changed: !keepB.has(index) }))
+        };
+      }
+
+      function diffText(tokens, tag) {
+        const line = node('p', undefined, `fb-text ${tag === 'del' ? 'bad' : 'good'}`);
+        tokens.forEach((token, index) => {
+          if (index) line.append(' ');
+          line.append(token.changed ? node(tag, token.word) : document.createTextNode(token.word));
+        });
+        return line;
+      }
+
+      function tip(text, plain = false) {
+        return node('div', text, `tip${plain ? ' plain' : ''}`);
+      }
+
+      const analysisLoader = { active: false, timer: null, startedAt: 0, finishing: false, title: '', sub: '', refs: null };
+      const ANALYSIS_STEPS = [
+        ['Konuşma hazırlanıyor', 0],
+        ['Claude transkripti okuyor', 4],
+        ['Hatalar ve kategoriler bulunuyor', 11],
+        ['Doğal alternatifler ve yeni kelimeler seçiliyor', 22],
+        ['Rapor ve çalışma planı yazılıyor', 36]
+      ];
+
+      function renderLoader() {
+        const loader = analysisLoader;
+        const wrap = node('div', undefined, 'loader');
+        const card = node('div', undefined, 'loader-card');
+        const head = node('div', undefined, 'loader-head');
+        const titles = node('div');
+        titles.append(node('h3', loader.title), node('p', loader.sub));
+        head.append(node('div', undefined, 'spinner'), titles);
+        const progress = node('div', undefined, 'loader-progress');
+        const track = node('div', undefined, 'bar-track');
+        const fill = node('span', undefined, 'bar-fill');
+        track.append(fill);
+        const meta = node('div', undefined, 'loader-meta');
+        const percent = node('span', '%0'); const elapsed = node('span', '0 sn');
+        meta.append(percent, elapsed);
+        progress.append(track, meta);
+        const list = node('ul', undefined, 'loader-steps');
+        const items = ANALYSIS_STEPS.map(([text]) => list.appendChild(node('li', text)));
+        card.append(head, progress, list);
+        const skeleton = node('div', undefined, 'skeleton');
+        wrap.append(card, node('p', 'Bu genelde yarım dakika kadar sürer. Sayfayı kapatma; rapor hazır olunca burada açılır.', 'insight-note'), skeleton);
+        insightContent.replaceChildren(wrap);
+        loader.refs = { fill, percent, elapsed, items };
+        tickLoader();
+      }
+
+      function tickLoader() {
+        const loader = analysisLoader;
+        if (!loader.refs) return;
+        const seconds = (Date.now() - loader.startedAt) / 1000;
+        const pct = loader.finishing ? 100 : Math.min(94, 94 * (1 - Math.exp(-seconds / 22)));
+        loader.refs.fill.style.width = `${pct}%`;
+        loader.refs.percent.textContent = `%${Math.round(pct)}`;
+        loader.refs.elapsed.textContent = `${Math.floor(seconds)} sn`;
+        let active = 0;
+        ANALYSIS_STEPS.forEach(([, from], index) => { if (seconds >= from) active = index; });
+        loader.refs.items.forEach((item, index) => {
+          const allDone = loader.finishing;
+          item.classList.toggle('done', allDone || index < active);
+          item.classList.toggle('active', !allDone && index === active);
+        });
+      }
+
+      function startLoader(title, sub) {
+        const loader = analysisLoader;
+        window.clearInterval(loader.timer);
+        Object.assign(loader, { active: true, startedAt: Date.now(), finishing: false, title, sub });
+        insights.classList.add('loading');
+        renderLoader();
+        loader.timer = window.setInterval(tickLoader, 300);
+      }
+
+      function stopLoader() {
+        window.clearInterval(analysisLoader.timer);
+        analysisLoader.active = false;
+        analysisLoader.refs = null;
+        insights.classList.remove('loading');
+      }
+
+      function accordion(titleText, subText, body, { open = false, tone = '', lead = null } = {}) {
+        const details = node('details', undefined, `acc${tone ? ` ${tone}` : ''}`);
+        details.open = open;
+        const summary = node('summary');
+        if (lead) summary.append(lead);
+        summary.append(node('span', titleText, 'acc-title'));
+        if (subText) summary.append(node('span', subText, 'acc-sub'));
+        const content = node('div', undefined, 'acc-body');
+        [].concat(body).forEach(item => content.append(item));
+        details.append(summary, content);
+        return details;
+      }
+
+      function renderInsights() {
+        insightContent.replaceChildren();
+        insightTabs.forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.insightTab === currentInsightTab)));
+        if (analysisLoader.active) { renderLoader(); return; }
+        if (!insightReport) {
+          const box = node('div', undefined, 'onboard');
+          box.append(node('h3', 'Ders içgörüleri'),
+            node('p', 'Dersi bitir, Sonnet 5 konuşmanı okuyup hatalarını, yeni kelimelerini ve çalışma planını çıkarsın.', 'insight-note'));
+          const steps = node('div', undefined, 'onboard-steps');
+          [['1 · Dersi bitir', 'Konuşma otomatik olarak Obsidian’a kaydedilir.'], ['2 · Analiz et', 'Soldaki “Sonnet 5 ile dersi analiz et” düğmesine bas.'], ['3 · Öğren', 'Hatalar, düzeltmeler ve kelimeler burada açılır.']]
+            .forEach(([title, body]) => { const step = node('div', undefined, 'onboard-step'); step.append(node('b', title), node('span', body)); steps.append(step); });
+          const cta = node('button', 'Dersi analiz et'); cta.type = 'button';
+          cta.style.justifySelf = 'start';
+          cta.addEventListener('click', () => analyze.click());
+          box.append(steps, cta);
+          insightContent.append(box);
+          return;
+        }
+        const report = insightReport;
+        if (currentInsightTab === 'recap') {
+          insightContent.append(node('h3', report.title || 'Ders özeti'), node('p', report.recap?.summary || '', 'lead'));
+          const metaParts = [];
+          if (lastInsightSavedAs) metaParts.push(`Obsidian’a kaydedildi: ${lastInsightSavedAs}`);
+          if (typeof lastInsightCostUsd === 'number') metaParts.push(`Sonnet: $${lastInsightCostUsd.toFixed(4)}`);
+          if (metaParts.length) insightContent.append(node('p', metaParts.join(' · '), 'insight-note'));
+          insightContent.append(accordion('İyi yaptıkların', '', insightList(report.recap?.strengths), { open: true, tone: 'good' }));
+          insightContent.append(accordion('Sonraki odak', '', insightList(report.recap?.nextFocus), { open: true, tone: 'focus' }));
+          const bars = (historyLessons.length ? historySpeakingStats('all') : speakingStats())
+            .map((item, index) => barRow(item.speaker, item.share, `${item.words} kelime · %${item.share}`, BAR_COLORS[index % BAR_COLORS.length]));
+          insightContent.append(accordion('Konuşma dağılımı', '', bars, { open: true }));
+        } else if (currentInsightTab === 'progress') {
+          const progress = report.progress || {};
+          const rate = Number(progress.errorsPer100Words) || 0;
+          const row = node('div', undefined, 'stat-row');
+          [['Güvenilir kelime', progress.reliableWords ?? 0, 'good'], ['Onaylı hata', progress.confirmedErrors ?? 0, 'bad'], ['100 kelimede hata', rate, 'info']].forEach(([k, v, tone]) => {
+            const cell = node('div'); cell.append(node('div', k, 'k'), node('div', String(v), `v ${tone}`)); row.append(cell);
+          });
+          insightContent.append(row);
+          insightContent.append(barRow(rate < 3 ? 'Yoğunluk: düşük' : rate < 6 ? 'Yoğunluk: orta' : 'Yoğunluk: yüksek', rate * 10, `${rate} / 100 kelime`, rate < 3 ? 'c-good' : rate < 6 ? 'c-orange' : 'c-red'));
+          const rankClass = ['', 'r1', 'r2', 'r3'];
+          const rankBars = ['c-red', 'c-orange', 'c-orange'];
+          (report.topMistakes || []).forEach((item, index) => {
+            const body = [barRow('Payı', Number(item.share) || 0, `%${item.share}`, rankBars[index] || 'c-blue')];
+            if (item.whyItRepeats) body.push(tip(item.whyItRepeats));
+            insightContent.append(accordion(item.category, `${item.count} kez · %${item.share}`, body, { open: index === 0, lead: node('span', String(item.rank ?? index + 1), `rank ${rankClass[index + 1] || 'rn'}`) }));
+          });
+          if (!report.topMistakes?.length) insightContent.append(tip('Henüz yeterli doğrulanmış hata yok.', true));
+          if (progress.trendNote) insightContent.append(tip(progress.trendNote, true));
+          insightContent.append(node('p', 'Kategori yüzdeleri yalnızca bulunan hataların dağılımıdır; genel İngilizce doğruluk puanı değildir.', 'insight-note'));
+        } else if (currentInsightTab === 'feedback') {
+          insightContent.append(node('p', 'Altı çizili kırmızı kısımlar hatalı, yeşil kısımlar önerilen doğru kullanım.', 'insight-note'));
+          const items = report.feedback || [];
+          items.forEach((item, index) => {
+            const diff = wordDiff(item.original, item.correction);
+            const before = node('div', undefined, 'fb-row'); before.append(node('span', 'Sen dedin', 'fb-label bad'), diffText(diff.a, 'del'));
+            const after = node('div', undefined, 'fb-row'); after.append(node('span', 'Doğrusu', 'fb-label good'), diffText(diff.b, 'ins'));
+            const body = [before, after];
+            if (item.reason) body.push(tip(item.reason));
+            insightContent.append(accordion(item.original, `${item.time || ''}`.trim(), body, { open: index === 0, lead: node('span', item.category || 'Hata', `pill ${pillColor(item.category)}`) }));
+          });
+          if (!items.length) insightContent.append(tip('Onaylı hata bulunmadı.', true));
+        } else if (currentInsightTab === 'vocabulary') {
+          const form = node('form', undefined, 'vocab-form');
+          const wordInput = node('input'); wordInput.type = 'text'; wordInput.placeholder = 'Kelime veya ifade'; wordInput.maxLength = 120; wordInput.required = true;
+          const meaningInput = node('input'); meaningInput.type = 'text'; meaningInput.placeholder = 'Anlamı / notum'; meaningInput.maxLength = 300;
+          const addButton = node('button', 'Ekle'); addButton.type = 'submit';
+          form.append(wordInput, meaningInput, addButton);
+          form.addEventListener('submit', event => { event.preventDefault(); saveVocabularyEntry({ word: wordInput.value, meaning: meaningInput.value }); wordInput.value = ''; meaningInput.value = ''; });
+          insightContent.append(form);
+          (report.vocabulary || []).forEach((item, index) => {
+            const body = [];
+            if (item.example) body.push(node('p', item.example, 'quote'));
+            if (item.alternatives?.length) {
+              const alts = node('div', undefined, 'vocab-alternatives');
+              alts.append('Daha doğal:');
+              item.alternatives.forEach(text => alts.append(node('span', text, 'suggest-chip')));
+              body.push(alts);
+            }
+            const add = node('button', 'Kelime kasama ekle'); add.type = 'button'; add.className = 'secondary';
+            add.style.justifySelf = 'start';
+            add.addEventListener('click', () => saveVocabularyEntry(item));
+            body.push(add);
+            insightContent.append(accordion(item.word, item.meaning, body, { open: index === 0 }));
+          });
+          if (!report.vocabulary?.length) insightContent.append(tip('Yeni kelime çıkarılmadı.', true));
+        } else if (currentInsightTab === 'study') {
+          (report.studyPlan || []).forEach((item, index) => {
+            const body = [node('p', item.instruction)];
+            if (item.example) body.push(node('p', item.example, 'quote'));
+            insightContent.append(accordion(item.topic, '', body, { open: index === 0, lead: node('span', String(index + 1), 'study-num') }));
+          });
+          if (!report.studyPlan?.length) insightContent.append(tip('Çalışma odağı önerilmedi.', true));
+        }
+      }
+
+      async function saveVocabularyEntry(item) {
+        const response = await fetch('/api/vocabulary', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item)
+        });
+        const result = await response.json();
+        if (!response.ok) { toast(result.error || 'Kelime kaydedilemedi.', 'error'); return; }
+        toast(result.message || `“${item.word}” Obsidian Kelime Kasası’na eklendi.`, result.duplicate ? 'info' : 'success');
+      }
+
+      async function refreshClaudeAuth() {
+        try {
+          const response = await fetch('/api/claude-auth');
+          if (!response.ok) throw new Error('Hesap kontrol edilemedi.');
+          const auth = await response.json();
+          const wasConnected = claudeConnected;
+          claudeConnected = auth.loggedIn === true;
+          claudeAuthStatus.textContent = claudeConnected
+            ? `Bağlı${auth.email ? ` · ${auth.email}` : ''}`
+            : auth.pending ? 'Giriş tarayıcıda bekleniyor…' : auth.error || 'Bağlı değil';
+          claudeLogin.hidden = claudeConnected || auth.pending;
+          claudeLogout.hidden = !claudeConnected || auth.pending;
+          if (auth.pending) window.setTimeout(refreshClaudeAuth, 2000);
+          else if (claudeConnected && !wasConnected) toast('Claude hesabı bağlandı.', 'success');
+        } catch {
+          claudeConnected = false;
+          claudeAuthStatus.textContent = 'Bağlantı kontrol edilemedi';
+          claudeLogin.hidden = false;
+          claudeLogout.hidden = true;
+        }
+      }
+
+      async function beginClaudeLogin() {
+        claudeLogin.disabled = true;
+        claudeAuthStatus.textContent = 'Giriş başlatılıyor…';
+        try {
+          const response = await fetch('/api/claude-auth/login', { method: 'POST' });
+          const auth = await response.json();
+          if (!response.ok || auth.error) throw new Error(auth.error || 'Giriş başlatılamadı.');
+          toast('Claude giriş sayfası tarayıcıda açıldı. Girişi orada tamamla.', 'info', 6500);
+          await refreshClaudeAuth();
+        } catch (error) {
+          claudeAuthStatus.textContent = error.message;
+          toast(error.message, 'error');
+        } finally {
+          claudeLogin.disabled = false;
+        }
+      }
+
+      async function endClaudeLogin() {
+        logoutDialog.close();
+        claudeLogout.disabled = true;
+        claudeAuthStatus.textContent = 'Çıkış yapılıyor…';
+        try {
+          const response = await fetch('/api/claude-auth/logout', { method: 'POST' });
+          const auth = await response.json();
+          if (!response.ok || auth.loggedIn) throw new Error(auth.error || 'Çıkış tamamlanamadı.');
+          claudeConnected = false;
+          await refreshClaudeAuth();
+          toast('Claude hesabından çıkış yapıldı.', 'success');
+        } catch (error) {
+          toast(error.message, 'error');
+          await refreshClaudeAuth();
+        } finally {
+          claudeLogout.disabled = false;
+        }
+      }
+
+      function chooseShareScope() {
+        return new Promise(resolve => {
+          const settle = scope => {
+            sendMine.removeEventListener('click', mine);
+            sendAll.removeEventListener('click', all);
+            cancelSend.removeEventListener('click', cancel);
+            privacyDialog.removeEventListener('close', cancel);
+            if (privacyDialog.open) privacyDialog.close();
+            resolve(scope);
+          };
+          const mine = () => settle('mine');
+          const all = () => settle('all');
+          const cancel = () => settle(null);
+          sendMine.addEventListener('click', mine);
+          sendAll.addEventListener('click', all);
+          cancelSend.addEventListener('click', cancel);
+          privacyDialog.addEventListener('close', cancel);
+          privacyDialog.showModal();
+        });
+      }
+
+      function myWordsForAnalysis() {
+        return [...messages]
+          .filter(item => item.speakerName === 'Ben')
+          .sort((a, b) => a.happenedAt - b.happenedAt)
+          .map(item => `Ben · ${new Date(item.happenedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}\n${item.text}`)
+          .join('\n\n');
+      }
+
+      async function analyzeWithClaude() {
+        if (running) { toast('Önce dersi bitir; rapor tamamlanan konuşmadan çıkarılır.', 'warn'); return; }
+        const usingHistory = Boolean(historyLessons.length && historyLoadedDate === historyDate.value);
+        if (!messages.length && !usingHistory) { flash(analyze, 'Transkript yok', false); return; }
+        if (!claudeConnected) { toast('Önce uygulamadaki Claude hesabını bağla.', 'warn'); return; }
+        const shareScope = await chooseShareScope();
+        if (!shareScope) return;
+        const transcript = usingHistory
+          ? transcriptFromHistory(shareScope)
+          : shareScope === 'mine' ? myWordsForAnalysis() : lessonMarkdown();
+        if (transcript.length < 30) { toast('Seçilen kapsamda analiz edilecek yeterli konuşma yok.', 'warn'); return; }
+        const selectedStats = usingHistory
+          ? historySpeakingStats(shareScope)
+          : shareScope === 'mine'
+            ? [{ speaker: 'Ben', words: messages.filter(item => item.speakerName === 'Ben').reduce((sum, item) => sum + wordCount(item.text), 0), share: 100 }]
+            : speakingStats();
+        const dateForAnalysis = usingHistory ? historyLoadedDate : sessionInfo().date;
+        const lessonCount = usingHistory ? historyLessons.length : 1;
+        const partners = usingHistory ? [...new Set(historyLessons.map(item => item.partner).filter(Boolean))] : [];
+        analyze.disabled = true;
+        analyze.textContent = 'Claude analiz ediyor…';
+        switchView('insights');
+        currentInsightTab = 'recap';
+        startLoader(`${formatHistoryDate(dateForAnalysis)} inceleniyor`, `${lessonCount} ders · Sonnet 5 analizi çalışıyor`);
+        try {
+          const response = await fetch('/api/insights', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              transcript,
+              lessonType: shareScope === 'mine' ? 'personal' : usingHistory ? 'archive' : lessonType.value,
+              partner: shareScope === 'mine' ? '' : usingHistory ? partners.join(', ') : friendName.value.trim(),
+              speaking: selectedStats,
+              analysisDate: dateForAnalysis,
+              lessonCount
+            })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Analiz alınamadı.');
+          analysisLoader.finishing = true;
+          tickLoader();
+          await new Promise(resolve => window.setTimeout(resolve, 450));
+          stopLoader();
+          insightReport = result.report;
+          lastInsightCostUsd = result.costUsd;
+          lastInsightSavedAs = result.savedAs || '';
+          recordSonnetCost(result.costUsd, result.usage);
+          currentInsightTab = 'recap';
+          renderInsights();
+          renderConversation();
+          if (result.savedAs) toast(`Analiz hazır ve Obsidian’a kaydedildi: ${result.savedAs}`, 'success', 6000);
+          else toast(`Analiz hazır ama Obsidian’a kaydedilemedi: ${result.saveError || ''}`, 'warn', 6000);
+        } catch (error) {
+          stopLoader();
+          const failed = node('div', undefined, 'insight-card card-error');
+          failed.append(node('h3', '😕 Analiz açılamadı'), node('p', error.message, 'insight-note'));
+          insightContent.replaceChildren(failed);
+          toast(error.message, 'error', 5200);
+        } finally {
+          analyze.disabled = false;
+          analyze.textContent = analyze.dataset.label || 'Sonnet 5 ile dersi analiz et';
+        }
+      }
+
+      function pad(value) { return String(value).padStart(2, '0'); }
+      function localDate(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
+      function localTime(date) { return `${pad(date.getHours())}:${pad(date.getMinutes())}`; }
+      function isoWeek(date) {
+        const target = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        const day = target.getUTCDay() || 7;
+        target.setUTCDate(target.getUTCDate() + 4 - day);
+        const year = target.getUTCFullYear();
+        const week = Math.ceil(((target - Date.UTC(year, 0, 1)) / 86400000 + 1) / 7);
+        return `${year}-W${pad(week)}`;
+      }
+      function sessionInfo() {
+        if (importedSession) {
+          const [year, month, day] = importedSession.date.split('-').map(Number);
+          const [hour, minute] = importedSession.start.split(':').map(Number);
+          const startAt = new Date(year, month - 1, day, hour, minute);
+          const type = importedSession.type;
+          const typeLabel = type === 'friend' ? 'Arkadaş' : 'Mentor';
+          return {
+            date: importedSession.date, start: importedSession.start, end: importedSession.end,
+            week: importedSession.week || isoWeek(startAt), month: importedSession.month,
+            type, partner: importedSession.partner, typeLabel,
+            stamp: `${importedSession.date} ${importedSession.start.replace(':', '.')}`,
+            lessonTitle: type === 'friend' ? `${typeLabel} — ${importedSession.partner}` : typeLabel
+          };
+        }
+        const times = messages.map(item => item.happenedAt).sort((a, b) => a - b);
+        const startAt = new Date(times[0] ?? Date.now());
+        const endAt = new Date(times[times.length - 1] ?? Date.now());
+        const date = localDate(startAt);
+        const type = lessonType.value;
+        const partner = type === 'friend' ? (friendName.value.trim() || 'Unknown') : 'Mentor';
+        const typeLabel = type === 'friend' ? 'Arkadaş' : 'Mentor';
+        const stamp = `${date} ${pad(startAt.getHours())}.${pad(startAt.getMinutes())}`;
+        return {
+          date, start: localTime(startAt), end: localTime(endAt), week: isoWeek(startAt), month: date.slice(0, 7),
+          type, partner, typeLabel, stamp,
+          lessonTitle: type === 'friend' ? `${typeLabel} — ${partner}` : typeLabel
+        };
+      }
+
+      function lessonMarkdown() {
+        const now = new Date();
+        const session = sessionInfo();
+        const lines = [...messages]
+          .sort((a, b) => a.happenedAt - b.happenedAt)
+          .map(item => {
+            const time = new Date(item.happenedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            const me = item.speakerName === 'Ben';
+            const slug = me ? 'ben' : `konusmaci-${item.speakerName.replace(/^Konuşmacı\s*/, '').toLowerCase().replace(/[^a-z0-9]+/g, '') || 'x'}`;
+            const body = item.text.split(/\r?\n/).map(line => `> ${line}`).join('\n');
+            return `> [!${slug}] ${displayName(item.speakerName)} · ${time}\n${body}`;
+          });
+        if (corrections.length) {
+          lines.push(['## Ses tanıma düzeltmeleri', 'Bu kelimeleri ders sırasında elle düzelttim. Bunlar İngilizce hatası değil, ses tanıma (ASR) hatasıdır.', corrections.map(item => `- ${item.from} → ${item.to} (${item.count} yer)`).join('\n')].join('\n\n'));
+        }
+        const frontmatter = [
+          '---',
+          'type: live-lesson-transcript',
+          `date: ${session.date}`,
+          `start: "${session.start}"`,
+          `end: "${session.end}"`,
+          `week: ${session.week}`,
+          `month: ${session.month}`,
+          `lesson_type: ${lessonType.value}`,
+          `partner: ${session.partner}`,
+          `duration_min: ${importedSession ? importedSession.durationMin : Math.round(lessonElapsedMs() / 60000)}`,
+          `cost_usd: ${importedSession ? importedSession.costUsd.toFixed(4) : lessonCost().toFixed(4)}`,
+          '---'
+        ].join('\n');
+        return [
+          frontmatter,
+          `# Canlı ders transkripti — ${session.date} ${session.start}–${session.end}`,
+          ...lines
+        ].join('\n\n');
+      }
+
+      async function copyTranscript() {
+        if (!messages.length) { flash(copy, 'Transkript yok', false); message('Kopyalanacak transkript henüz yok.'); return; }
+        try {
+          await navigator.clipboard.writeText(lessonMarkdown());
+          flash(copy, '✓ Kopyalandı');
+          toast('Transkript Markdown olarak kopyalandı.', 'success');
+        } catch (error) {
+          flash(copy, 'Kopyalanamadı', false);
+          message('Kopyalama izni verilmedi. Sayfayı localhost adresinde açıp tekrar dene.', 'error');
+        }
+      }
+
+      async function saveLessonAutomatically() {
+        if (!messages.length || lessonSaved) return;
+        try {
+          const response = await fetch('/api/save-lesson', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ markdown: lessonMarkdown() })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'Transkript kaydedilemedi.');
+          lessonSaved = true;
+          toast(`Transkript Obsidian’a kaydedildi: ${result.savedAs}`, 'success', 5500);
+          await loadLessonDates();
+        } catch (error) {
+          toast(`Transkript Obsidian’a kaydedilemedi: ${error.message}`, 'error', 6500);
+        }
+      }
+
+      function analysisPackage() {
+        const x = sessionInfo();
+        const friend = x.type === 'friend';
+        const lessonPath = `Lessons/${x.month}/${x.stamp} — ${x.lessonTitle} — Transcript.md`;
+        const benPath = `Ben/${x.month}/${x.stamp} — ${friend ? x.partner : 'Mentor'} — Ben.md`;
+        const friendPath = `Friends/${x.partner}/${x.month}/${x.stamp} — ${x.partner}.md`;
+        const reportPath = `Reports/${x.month}/${x.stamp} — ${x.lessonTitle} — Ders Raporu.md`;
+        const link = path => `[[${path.replace(/\.md$/, '')}]]`;
+        return `Obsidian kasası ${vaultPath} içinde çalışan İngilizce ders arşiv ve koç agentısın.
+
+# Bu ders
+- Tür: ${friend ? `ARKADAŞ (${x.partner})` : 'MENTOR / ÖĞRETMEN'}
+- Tarih: ${x.date} · Saat: ${x.start}–${x.end} · Hafta: ${x.week} · Ay: ${x.month}
+
+Aynı gün birden fazla ders olabilir. Her ders başlangıç saatine göre AYRI dosyadır; önceki bir dersin dosyasını asla birleştirme veya üzerine yazma. Aynı adda dosya varsa adın sonuna " (2)" ekle. Dosya adlarında saat için iki nokta yerine nokta kullan (16.18). Önce Ana Sayfa.md, English Progress.md ve Error Library.md dosyalarını oku; mevcut biçimi koru.
+
+# Yazılacak dosyalar
+1. ${lessonPath}
+   Ham transkripti aşağıdan HİÇ DEĞİŞTİRMEDEN kaydet.
+2. ${benPath}
+   Benim kişisel ders raporum (şablon aşağıda). Yalnızca "Ben" satırlarından çıkar.
+${friend ? `3. ${friendPath}
+   ${x.partner} için ayrı rapor, aynı şablonla (type: friend-lesson-report). Transkriptte birden fazla Konuşmacı etiketi varsa ve hangisinin ${x.partner} olduğu net değilse isim atama; her etiketi ayrı bölüm olarak "Unknown Speakers" başlığı altında tut. ${x.partner} verisi English Progress.md veya Error Library.md içine ASLA girmez.
+4.` : '3.'} ${reportPath}
+   Kısa ders özeti: konuşma dağılımı tablosu, veri notları (ASR belirsizlikleri, konuşmacı ayrımı hataları, istatistik dışı bırakılanlar) ve kişi raporlarına bağlantılar: ${link(benPath)}${friend ? `, ${link(friendPath)}` : ''}, ham kayıt ${link(lessonPath)}.
+${friend ? '5.' : '4.'} English Progress.md
+   "Ders ders" tablosunun SONUNA tek satır ekle: | ${x.date} | ${x.start}–${x.end} | ${x.week} | ${friend ? 'arkadaş' : 'mentor'} | ${x.partner} | Ben kelime | Ben payı | onaylı hata | hata/100 | en baskın 3 konu | ${link(benPath)} |
+   Sonra "Kategori sayacı" tablosuna Ben'in bu dersteki hatalarını ekleyip adetleri ve payları yeniden hesapla.
+${friend ? '6.' : '5.'} Error Library.md
+   "## ${x.month}" başlığı yoksa aç; altına "### ${x.date} ${x.start} — ${x.lessonTitle}" alt başlığı aç ve kaynak bağlantısı ${link(benPath)} ekle. Tablo: | Saat | Ham ifade | Düzeltme | Kategori |. Sadece Ben'in onaylı hataları.
+
+# Ben raporu şablonu
+Frontmatter:
+---
+type: ben-lesson-report
+date: ${x.date}
+start: "${x.start}"
+end: "${x.end}"
+week: ${x.week}
+month: ${x.month}
+lesson_type: ${x.type}
+partner: ${x.partner}
+words: <Ben kelime sayısı>
+share: <Ben konuşma payı, sayı>
+confirmed_errors: <sayı>
+errors_per_100: <sayı>
+top_categories: [<en sık 1-3 kategori>]
+transcript: "${link(lessonPath)}"
+---
+Başlık: "# Ben — ${x.lessonTitle} — ${x.date} ${x.start}"
+Bölümler, bu sırayla:
+1. Özet satırı: **Konuşma:** N kelime · %P · **Onaylı hata:** N · **Hata / 100 kelime:** N
+2. Onaylı hatalar: | # | Saat | Ham ifade | Doğal düzeltme | Kısa neden | Kategori | Güven | — Saat, transkriptteki o satırın saati (HH:MM).
+3. Hata sayılmayan ama not: doğru ama doğal olmayan ifadeler, ASR belirsizlikleri.
+4. Hata dağılımı: | Konu | Adet | Pay |
+5. En sık konu (1-2 cümle, Türkçe).
+6. İki pratik cümle (benim konuşmama benzeyen).
+7. Olumlu: kendi kendime yaptığım düzeltmeler ve doğru kullandığım kalıplar; önceki raporlardaki odak konuları işlediyse belirt.
+8. Sonraki ders için kısa plan (en fazla 4 madde, ölçülebilir hedefle).
+
+# Genel kurallar
+- ASR belirsizliği olan cümleleri, konuşmacı ayrımı hatası gibi görünen satırları ve bilinçli yabancı/Türkçe kelimeleri hata sayma; veri notlarına yaz. uh/ah, tekrarlar ve yarım başlangıçları ancak anlamı bozuyorsa düzelt.
+- Transkriptte her mesaj ayrı bir callout bloğudur: başlık "> [!ben] Ben · 16:18" (konuşmacı · saat), altında "> metin". Lessons dosyasına bu biçimi olduğu gibi kaydet; hatanın saatini bu başlıktan al.
+- Konuşmacı adı doğrudan bir isimse (ör. ${x.partner}), o etiketi ben elle atadım; o kişiye ait say. "Konuşmacı A/B" gibi etiketler hâlâ belirsizdir.
+- Transkriptin sonundaki "Ses tanıma düzeltmeleri" listesi, ders sırasında elle düzelttiğim ASR hatalarıdır; bunları asla İngilizce hatası sayma.
+- "Konuşmacı PENDING" veya "Konuşmacı ?" etiketi, ses tanıma tarafından henüz atanmamış konuşmacıdır; ayrı etiket olarak tut, kime ait olduğunu tahmin etme.
+- Kategoriler: özne-fiil uyumu, fiil kalıbı / infinitive, zamanlar, kelime sırası, sıfat-zarf, edat / artikel, kelime seçimi / collocation. Her hata tek baskın kategoriye yazılır.
+- Yüzdeleri "bulunan onaylı hataların kategori dağılımı" olarak açıkla; genel İngilizce yanlış oranı gibi gösterme.
+- Mentor modunda mentorun cümlelerini hata istatistiğime katma; yalnızca bağlam olarak kullan.
+- Çıktı dili Türkçe; ton dürüst, somut ve cesaret verici. Hata yoksa "hata yok" de, hata uydurma.
+- İş bitince oluşturduğun/güncellediğin dosyaların listesini ver.
+
+# Konuşma dağılımı (uygulamanın kelime sayımı)
+${speakingDistributionMarkdown()}
+
+# Ham transkript
+
+${lessonMarkdown()}`;
+      }
+
+      async function copyAnalysisPackage() {
+        if (!messages.length) { flash(copyAnalysis, 'Transkript yok', false); message('Analiz edilecek transkript henüz yok.'); return; }
+        if (lessonType.value === 'friend' && !friendName.value.trim()) { flash(copyAnalysis, 'İsim gerekli', false); message('Arkadaş modunda önce arkadaşının adını yaz.'); friendName.focus(); return; }
+        try {
+          await navigator.clipboard.writeText(analysisPackage());
+          flash(copyAnalysis, '✓ Agent kopyalandı');
+          toast('Ders koçu agent komutu kopyalandı. Codex agentına yapıştırabilirsin.', 'success');
+        } catch (error) {
+          flash(copyAnalysis, 'Kopyalanamadı', false);
+          message('Kopyalama izni verilmedi. Sayfayı localhost adresinde açıp tekrar dene.', 'error');
+        }
+      }
+
+      function downsampleToPcm16(input, sourceRate) {
+        if (sourceRate === 16000) {
+          const output = new Int16Array(input.length);
+          input.forEach((sample, index) => { output[index] = Math.max(-1, Math.min(1, sample)) * 0x7fff; });
+          return output.buffer;
+        }
+        const ratio = sourceRate / 16000;
+        const output = new Int16Array(Math.round(input.length / ratio));
+        let inputOffset = 0;
+        for (let index = 0; index < output.length; index += 1) {
+          const nextOffset = Math.min(input.length, Math.round((index + 1) * ratio));
+          let sum = 0;
+          for (let cursor = inputOffset; cursor < nextOffset; cursor += 1) sum += input[cursor];
+          const sample = sum / Math.max(1, nextOffset - inputOffset);
+          output[index] = Math.max(-1, Math.min(1, sample)) * 0x7fff;
+          inputOffset = nextOffset;
+        }
+        return output.buffer;
+      }
+
+      function labelForSpeaker(speaker) {
+        return `Konuşmacı ${speaker || '?'}`;
+      }
+
+      function textFromWords(words) {
+        return words.reduce((text, word) => {
+          const token = word.text || word.word || '';
+          if (!token) return text;
+          return text && !/^[,.;:!?%)\]}]/.test(token) ? `${text} ${token}` : `${text}${token}`;
+        }, '');
+      }
+
+      function addRemoteTurn(data) {
+        const words = Array.isArray(data.words) ? data.words : [];
+        if (!words.length || !words.some(word => word.speaker)) {
+          addMessage(labelForSpeaker(data.speaker_label), data.transcript, Date.now());
+          return;
+        }
+        let group = [];
+        words.forEach(word => {
+          const sameSpeaker = group.length && group[0].speaker === word.speaker;
+          if (!sameSpeaker && group.length) {
+            addMessage(labelForSpeaker(group[0].speaker), textFromWords(group), Date.now());
+            group = [];
+          }
+          group.push(word);
+        });
+        if (group.length) addMessage(labelForSpeaker(group[0].speaker), textFromWords(group), Date.now());
+      }
+
+      async function connectAssemblySocket(stream) {
+        const tokenResponse = await fetch('/api/assembly-token');
+        const tokenData = await tokenResponse.json();
+        if (!tokenResponse.ok) throw new Error(tokenData.error || 'Canlı ses bağlantısı kurulamadı.');
+        const verbatimPrompt = stream.kind === 'me'
+          ? `English learner speaking naturally. Transcribe verbatim. Preserve fillers (uh, um, ah), repetitions, false starts, stutters, and incorrectly spoken words. Do not correct grammar. Names and terms: ${namesAndTerms()}`
+          : `Transcribe every speaker verbatim. Preserve fillers, repetitions, false starts, stutters, and incorrectly spoken words. Do not correct grammar. Names and terms: ${namesAndTerms()}`;
+        const params = new URLSearchParams({
+          token: tokenData.token,
+          sample_rate: '16000',
+          speech_model: 'u3-rt-pro',
+          mode: 'max_accuracy',
+          prompt: verbatimPrompt,
+          speaker_labels: stream.kind === 'remote' && maxSpeakers.value !== '1' ? 'true' : 'false'
+        });
+        if (stream.kind === 'remote' && maxSpeakers.value !== '1') params.set('max_speakers', maxSpeakers.value);
+        const socket = new WebSocket(`wss://streaming.assemblyai.com/v3/ws?${params}`);
+        stream.socket = socket;
+        socket.billing = { openedAt: 0, diarized: params.get('speaker_labels') === 'true' };
+        socket.addEventListener('open', () => { socket.billing.openedAt = Date.now(); openSockets.add(socket); updateCost(); });
+        socket.addEventListener('close', () => commitSocket(socket));
+        socket.addEventListener('message', event => {
+          const data = JSON.parse(event.data);
+          if (data.type !== 'Turn' || !data.transcript?.trim()) return;
+          if (stream.kind === 'remote' && data.end_of_turn) {
+            liveRemoteText = '';
+            addRemoteTurn(data);
+          } else if (stream.kind === 'remote') {
+            liveRemoteSpeaker = data.speaker_label || '?';
+            liveRemoteText = data.transcript;
+            renderConversation();
+          } else if (data.end_of_turn) {
+            liveMicText = '';
+            addMessage('Ben', data.transcript, Date.now());
+          } else {
+            liveMicText = data.transcript;
+            renderConversation();
+          }
+        });
+        socket.addEventListener('close', () => {
+          if (running && !stream.intentionalClose) message(`${stream.kind === 'remote' ? 'Karşı taraf' : 'Mikrofon'} bağlantısı kapandı; dersi yeniden başlat.`);
+        });
+        await new Promise((resolve, reject) => {
+          const timeout = window.setTimeout(() => reject(new Error('Canlı ses bağlantısı zaman aşımına uğradı.')), 10000);
+          socket.addEventListener('open', () => { window.clearTimeout(timeout); resolve(); }, { once: true });
+          socket.addEventListener('error', () => { window.clearTimeout(timeout); reject(new Error('AssemblyAI canlı bağlantısı açılamadı.')); }, { once: true });
+        });
+        window.clearTimeout(stream.renewTimer);
+        stream.renewTimer = window.setTimeout(async () => {
+          if (!running) return;
+          stream.intentionalClose = true;
+          terminateSocket(socket);
+          try { await connectAssemblySocket(stream); } catch (error) { message(error.message); }
+          finally { stream.intentionalClose = false; }
+        }, 9 * 60 * 1000);
+      }
+
+      async function startAssemblyStream(mediaStream, kind) {
+        const stream = { kind, intentionalClose: false, socket: undefined, renewTimer: undefined };
+        assemblyStreams[kind] = stream;
+        stream.audioContext = new AudioContext();
+        stream.source = stream.audioContext.createMediaStreamSource(mediaStream);
+        stream.processor = stream.audioContext.createScriptProcessor(4096, 1, 1);
+        stream.silentGain = stream.audioContext.createGain();
+        stream.silentGain.gain.value = 0;
+        stream.processor.onaudioprocess = event => {
+          if (stream.socket?.readyState !== WebSocket.OPEN) return;
+          const input = event.inputBuffer.getChannelData(0);
+          stream.socket.send(downsampleToPcm16(input, stream.audioContext.sampleRate));
+        };
+        stream.source.connect(stream.processor);
+        stream.processor.connect(stream.silentGain);
+        stream.silentGain.connect(stream.audioContext.destination);
+        await connectAssemblySocket(stream);
+      }
+
+      function stopAssemblyStreams() {
+        Object.values(assemblyStreams).forEach(stream => {
+          stream.intentionalClose = true;
+          window.clearTimeout(stream.renewTimer);
+          if (stream.socket) terminateSocket(stream.socket);
+          stream.processor?.disconnect();
+          stream.source?.disconnect();
+          stream.silentGain?.disconnect();
+          stream.audioContext?.close();
+        });
+        Object.keys(assemblyStreams).forEach(key => delete assemblyStreams[key]);
+        liveMicText = '';
+        liveRemoteText = '';
+      }
+
+      start.addEventListener('click', async () => {
+        if (!teacherDevice.value || !micDevice.value) { flash(start, 'Önce cihaz seç', false); message('Cihazlar sekmesinde “Cihazları bul”a basıp iki kaynak seç.'); showTab('devices'); return; }
+        if (importedSession) {
+          if (!window.confirm('Canlı derse geçmek için aktarılan transkripti ekrandan kaldırayım mı?')) return;
+          messages.splice(0, messages.length);
+          corrections.splice(0, corrections.length);
+          messageSeq = 0;
+          importedSession = null;
+          lessonSaved = false;
+          importStatus.textContent = '';
+          renderConversation();
+        }
+        start.disabled = true;
+        start.textContent = 'Bağlanıyor…';
+        toast('Ses kaynakları bağlanıyor…', 'info', 2200);
+        try {
+          let teacher;
+          if (teacherDevice.value === SYSTEM_AUDIO) {
+            toast('Açılan pencerede “Tüm ekran”ı seç ve “Sistem sesini de paylaş”ı işaretle.', 'info', 6000);
+            const display = await navigator.mediaDevices.getDisplayMedia({
+              video: true,
+              audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+              systemAudio: 'include'
+            });
+            display.getVideoTracks().forEach(track => track.stop());
+            if (!display.getAudioTracks().length) throw new Error('Sistem sesi paylaşılmadı. “Sistem sesini de paylaş” kutusunu işaretleyip tekrar dene.');
+            teacher = new MediaStream(display.getAudioTracks());
+          } else {
+            teacher = await navigator.mediaDevices.getUserMedia({
+              audio: { deviceId: { exact: teacherDevice.value }, echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+            });
+          }
+          const mic = await navigator.mediaDevices.getUserMedia({
+            audio: { deviceId: { exact: micDevice.value }, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+          });
+          streams.push(teacher, mic);
+          running = true;
+          lessonSaved = false;
+          resetLessonCost();
+          await Promise.all([startAssemblyStream(teacher, 'remote'), startAssemblyStream(mic, 'me')]);
+          start.disabled = true; refresh.disabled = true; stop.disabled = false;
+          start.textContent = '● Ders sürüyor';
+          start.classList.add('active-state');
+          setStatus('Ders dinleniyor', true);
+          toast('Ders başladı. Konuşmacılar canlı ayrılıyor.', 'success');
+        } catch (error) {
+          running = false;
+          stopAssemblyStreams();
+          streams.splice(0).forEach(stream => stream.getTracks().forEach(track => track.stop()));
+          start.disabled = false;
+          start.textContent = start.dataset.label || 'Dersi başlat';
+          flash(start, 'Başlatılamadı', false);
+          message(`Başlatılamadı: ${error.message}`, 'error');
+        }
+      });
+
+      stop.addEventListener('click', () => {
+        running = false;
+        stopAssemblyStreams();
+        streams.splice(0).forEach(stream => stream.getTracks().forEach(track => track.stop()));
+        start.disabled = false; refresh.disabled = false; stop.disabled = true;
+        start.classList.remove('active-state');
+        stopCostTicker();
+        void saveLessonAutomatically();
+        start.textContent = start.dataset.label || 'Dersi başlat';
+        flash(start, '✓ Ders bitti');
+        setStatus('Ders bitti');
+        toast('Akış durduruldu. Transkript Obsidian’a kaydediliyor.', 'success');
+      });
+
+      // shadcn/ui tarzı Select: yerel <select> gizli kalır, değer ve change olayları onun üzerinden akar.
+      const CHEVRON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+      const CHECK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+      const selectMenus = new Set();
+      const nativeValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+
+      function enhanceSelect(select) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ui-select';
+        select.before(wrap);
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'ui-select-trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+        const valueEl = document.createElement('span');
+        valueEl.className = 'ui-select-value';
+        trigger.append(valueEl);
+        trigger.insertAdjacentHTML('beforeend', CHEVRON);
+        const list = document.createElement('div');
+        list.className = 'ui-select-content';
+        list.setAttribute('role', 'listbox');
+        list.hidden = true;
+        wrap.append(trigger, select);
+        document.body.append(list);
+        select.classList.add('native-hidden');
+        select.tabIndex = -1;
+        select.setAttribute('aria-hidden', 'true');
+        let active = -1;
+
+        const optionList = () => [...select.options];
+        function setActive(index) {
+          active = index;
+          [...list.children].forEach((el, i) => el.classList.toggle('active', i === index));
+          list.children[index]?.scrollIntoView({ block: 'nearest' });
+        }
+        function renderList() {
+          list.replaceChildren();
+          optionList().forEach((option, index) => {
+            const item = document.createElement('div');
+            item.className = `ui-select-item${index === active ? ' active' : ''}`;
+            item.setAttribute('role', 'option');
+            item.setAttribute('aria-selected', String(option.selected));
+            const text = document.createElement('span');
+            text.textContent = option.textContent;
+            item.append(text);
+            item.insertAdjacentHTML('beforeend', CHECK);
+            item.addEventListener('mousemove', () => { if (active !== index) setActive(index); });
+            item.addEventListener('mousedown', event => { event.preventDefault(); choose(index); });
+            list.append(item);
+          });
+        }
+        function sync() {
+          valueEl.textContent = select.selectedOptions[0]?.textContent || 'Seç';
+          if (!list.hidden) renderList();
+        }
+        function position() {
+          const rect = trigger.getBoundingClientRect();
+          list.style.left = `${rect.left}px`;
+          list.style.top = `${rect.bottom + 4}px`;
+          list.style.width = `${rect.width}px`;
+          list.style.maxHeight = `${Math.max(140, Math.min(300, window.innerHeight - rect.bottom - 16))}px`;
+        }
+        function open() {
+          selectMenus.forEach(menu => menu !== api && menu.close());
+          active = Math.max(0, select.selectedIndex);
+          renderList();
+          position();
+          list.hidden = false;
+          wrap.classList.add('open');
+          trigger.setAttribute('aria-expanded', 'true');
+          list.children[active]?.scrollIntoView({ block: 'nearest' });
+        }
+        function close() {
+          if (list.hidden) return;
+          list.hidden = true;
+          wrap.classList.remove('open');
+          trigger.setAttribute('aria-expanded', 'false');
+        }
+        function choose(index) {
+          if (select.selectedIndex !== index) {
+            select.selectedIndex = index;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          sync();
+          close();
+          trigger.focus();
+        }
+        const api = { close };
+        selectMenus.add(api);
+
+        trigger.addEventListener('click', () => (list.hidden ? open() : close()));
+        trigger.addEventListener('keydown', event => {
+          const count = select.options.length;
+          if (list.hidden) {
+            if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) { event.preventDefault(); open(); }
+            return;
+          }
+          if (event.key === 'ArrowDown') { event.preventDefault(); setActive(Math.min(count - 1, active + 1)); }
+          else if (event.key === 'ArrowUp') { event.preventDefault(); setActive(Math.max(0, active - 1)); }
+          else if (event.key === 'Home') { event.preventDefault(); setActive(0); }
+          else if (event.key === 'End') { event.preventDefault(); setActive(count - 1); }
+          else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (active >= 0) choose(active); }
+          else if (event.key === 'Escape' || event.key === 'Tab') close();
+        });
+        document.addEventListener('mousedown', event => {
+          if (!list.hidden && !wrap.contains(event.target) && !list.contains(event.target)) close();
+        });
+        window.addEventListener('resize', () => { if (!list.hidden) position(); });
+        document.addEventListener('scroll', event => { if (!list.hidden && !list.contains(event.target)) position(); }, true);
+        new MutationObserver(sync).observe(select, { childList: true, subtree: true, attributes: true });
+        select.addEventListener('change', sync);
+        Object.defineProperty(select, 'value', {
+          configurable: true,
+          get() { return nativeValue.get.call(this); },
+          set(value) { nativeValue.set.call(this, value); sync(); }
+        });
+        sync();
+      }
+
+      function lockRender() { renderLocked = true; }
+      function unlockRender() { renderLocked = false; if (renderPending) renderConversation(); }
+
+      function startRename(element, raw) {
+        lockRender();
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'rename-input';
+        input.value = displayName(raw);
+        element.replaceWith(input);
+        input.focus();
+        input.select();
+        let done = false;
+        const finish = save => {
+          if (done) return;
+          done = true;
+          const value = input.value.trim();
+          if (save) {
+            if (value && value !== raw) aliases.set(raw, value); else aliases.delete(raw);
+            if (value) toast(`${raw === value ? raw : `“${raw}” artık “${value}”`} olarak yazılıyor.`, 'success');
+          }
+          unlockRender();
+          renderConversation();
+        };
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Enter') finish(true);
+          if (event.key === 'Escape') finish(false);
+        });
+        input.addEventListener('blur', () => finish(true));
+      }
+
+      const fixPop = document.querySelector('#fixPop');
+      const fixFrom = document.querySelector('#fixFrom');
+      const fixInput = document.querySelector('#fixInput');
+      const fixAll = document.querySelector('#fixAll');
+      const fixKeyterm = document.querySelector('#fixKeyterm');
+      let fixTarget = null;
+
+      function openFix(messageId, selected, rect) {
+        fixTarget = { messageId, selected };
+        fixFrom.textContent = selected;
+        fixInput.value = '';
+        lockRender();
+        fixPop.hidden = false;
+        const width = fixPop.offsetWidth;
+        const height = fixPop.offsetHeight;
+        const left = Math.min(Math.max(12, rect.left + rect.width / 2 - width / 2), window.innerWidth - width - 12);
+        const below = rect.bottom + 8;
+        const top = below + height > window.innerHeight - 12 ? Math.max(12, rect.top - height - 8) : below;
+        fixPop.style.left = `${left}px`;
+        fixPop.style.top = `${top}px`;
+        fixInput.focus();
+      }
+      function closeFix() {
+        if (fixPop.hidden) return;
+        fixPop.hidden = true;
+        fixTarget = null;
+        window.getSelection()?.removeAllRanges();
+        unlockRender();
+      }
+      function escapeRegExp(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+      function saveFix() {
+        if (!fixTarget) return;
+        const from = fixTarget.selected;
+        const to = fixInput.value.trim();
+        if (!to) { fixInput.focus(); return; }
+        const pattern = new RegExp(escapeRegExp(from), 'gi');
+        let count = 0;
+        const targets = fixAll.checked ? messages : messages.filter(item => item.id === fixTarget.messageId);
+        targets.forEach(item => {
+          const matches = item.text.match(pattern);
+          if (!matches) return;
+          if (fixAll.checked) { count += matches.length; item.text = item.text.replace(pattern, to); }
+          else { count += 1; item.text = item.text.replace(new RegExp(escapeRegExp(from), 'i'), to); }
+          item.edited = true;
+        });
+        if (count) {
+          const existing = corrections.find(item => item.from.toLowerCase() === from.toLowerCase() && item.to === to);
+          if (existing) existing.count += count; else corrections.push({ from, to, count });
+        }
+        if (fixKeyterm.checked) {
+          const terms = context.value.split(',').map(term => term.trim()).filter(Boolean);
+          if (!terms.some(term => term.toLowerCase() === to.toLowerCase())) {
+            terms.push(to);
+            context.value = terms.join(', ');
+            saveSettings();
+          }
+        }
+        closeFix();
+        renderConversation();
+        renderTerms();
+        renderFixes();
+        toast(`“${from}” → “${to}” (${count} yer)${fixKeyterm.checked ? ' · özel kelimelere eklendi' : ''}`, 'success');
+      }
+
+      conversation.addEventListener('mouseup', () => window.setTimeout(() => {
+        if (!fixPop.hidden) return;
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) return;
+        const text = selection.toString().replace(/\s+/g, ' ').trim();
+        if (!text || text.length > 80) return;
+        const anchor = selection.anchorNode?.parentElement?.closest('.bubble[data-id]');
+        const focus = selection.focusNode?.parentElement?.closest('.bubble[data-id]');
+        if (!anchor || anchor !== focus) return;
+        const clean = text.replace(/\s*✎ düzeltildi$/, '').trim();
+        if (!clean) return;
+        openFix(anchor.dataset.id, clean, selection.getRangeAt(0).getBoundingClientRect());
+      }, 0));
+      document.querySelector('#fixCancel').addEventListener('click', closeFix);
+      document.querySelector('#fixSave').addEventListener('click', saveFix);
+      fixInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') saveFix();
+        if (event.key === 'Escape') closeFix();
+      });
+      document.addEventListener('mousedown', event => {
+        if (!fixPop.hidden && !fixPop.contains(event.target)) closeFix();
+      });
+
+      function saveSettings() {
+        try { localStorage.setItem('ders-akisi-settings', JSON.stringify({ context: context.value, friendName: friendName.value, lessonType: lessonType.value })); } catch {}
+      }
+      try {
+        const saved = JSON.parse(localStorage.getItem('ders-akisi-settings') || 'null');
+        if (saved) {
+          if (typeof saved.context === 'string' && saved.context.trim()) context.value = saved.context;
+          if (typeof saved.friendName === 'string') friendName.value = saved.friendName;
+          if (saved.lessonType === 'friend' || saved.lessonType === 'mentor') lessonType.value = saved.lessonType;
+        }
+      } catch {}
+      [context, friendName].forEach(input => input.addEventListener('input', () => { saveSettings(); renderConversation(); }));
+      lessonType.addEventListener('change', () => { saveSettings(); renderConversation(); });
+      maxSpeakers.addEventListener('change', () => renderConversation());
+
+      document.querySelectorAll('.settings select').forEach(enhanceSelect);
+      enhanceSelect(historyDate);
+
+      // ---------- Sekmeler ----------
+      const tabs = [...document.querySelectorAll('.tab')];
+      const panels = [...document.querySelectorAll('.panel')];
+      function showTab(name) {
+        tabs.forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.tab === name)));
+        panels.forEach(panel => { panel.hidden = panel.dataset.panel !== name; });
+        selectMenus.forEach(menu => menu.close());
+        try { localStorage.setItem('ders-akisi-tab', name); } catch {}
+      }
+      tabs.forEach(tab => tab.addEventListener('click', () => showTab(tab.dataset.tab)));
+      document.querySelector('.tabs').addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        const index = tabs.findIndex(tab => tab.getAttribute('aria-selected') === 'true');
+        const next = tabs[(index + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        showTab(next.dataset.tab);
+        next.focus();
+      });
+
+      function updateDeviceSummary() {
+        const summary = document.querySelector('#deviceSummary');
+        const remote = teacherDevice.selectedOptions[0]?.textContent;
+        const mic = micDevice.selectedOptions[0]?.textContent;
+        if (!teacherDevice.value || !micDevice.value) {
+          summary.innerHTML = 'Cihaz seçilmedi. <strong>Cihazlar</strong> sekmesinden bul.';
+          return;
+        }
+        summary.textContent = `Karşı taraf: ${remote} · Ben: ${mic}`;
+      }
+      [teacherDevice, micDevice].forEach(select => {
+        select.addEventListener('change', updateDeviceSummary);
+        new MutationObserver(updateDeviceSummary).observe(select, { childList: true });
+      });
+
+      // ---------- Özel kelimeler ----------
+      const termList = document.querySelector('#termList');
+      const termInput = document.querySelector('#termInput');
+      const fixList = document.querySelector('#fixList');
+      function currentTerms() { return context.value.split(',').map(term => term.trim()).filter(Boolean); }
+      function setTerms(list) {
+        const unique = [];
+        list.forEach(term => { if (!unique.some(item => item.toLowerCase() === term.toLowerCase())) unique.push(term); });
+        context.value = unique.join(', ');
+        saveSettings();
+        renderTerms();
+      }
+      function renderTerms() {
+        termList.replaceChildren();
+        const terms = currentTerms();
+        if (!terms.length) { termList.innerHTML = '<p class="note">Henüz kelime yok.</p>'; return; }
+        terms.forEach(term => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.append(term);
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.textContent = '×';
+          remove.title = `${term} kelimesini kaldır`;
+          remove.addEventListener('click', () => setTerms(currentTerms().filter(item => item !== term)));
+          chip.append(remove);
+          termList.append(chip);
+        });
+      }
+      function addTerms() {
+        const incoming = termInput.value.split(',').map(term => term.trim()).filter(Boolean);
+        if (!incoming.length) { termInput.focus(); return; }
+        setTerms([...currentTerms(), ...incoming]);
+        termInput.value = '';
+        toast(`${incoming.join(', ')} özel kelimelere eklendi.`, 'success');
+      }
+      document.querySelector('#termAdd').addEventListener('click', addTerms);
+      termInput.addEventListener('keydown', event => { if (event.key === 'Enter') addTerms(); });
+      function renderFixes() {
+        fixList.replaceChildren();
+        if (!corrections.length) {
+          fixList.innerHTML = '<li class="note" style="border-style:dashed">Henüz yok. Sohbette yanlış duyulan kelimeyi seçerek düzeltebilirsin.</li>';
+          return;
+        }
+        corrections.forEach(item => {
+          const row = document.createElement('li');
+          const text = document.createElement('span');
+          const from = document.createElement('s');
+          from.textContent = item.from;
+          text.append(from, ` → ${item.to}`);
+          const count = document.createElement('span');
+          count.className = 'count';
+          count.textContent = `${item.count} yer`;
+          row.append(text, count);
+          fixList.append(row);
+        });
+      }
+
+      // ---------- Maliyet ----------
+      const openSockets = new Set();
+      const rateInputs = ['rateBase', 'ratePrompt', 'rateDiar'].map(id => document.querySelector(`#${id}`));
+      const [rateBase, ratePrompt, rateDiar] = rateInputs;
+      let usageStore = { totalUsd: 0, totalSec: 0, months: {} };
+      let lessonClosedUsd = 0;
+      let lessonClosedSec = 0;
+      let lessonStartedAt = 0;
+      let lessonEndedAt = 0;
+      let costTicker = 0;
+      try {
+        const saved = JSON.parse(localStorage.getItem('ders-akisi-usage') || 'null');
+        if (saved && typeof saved.totalUsd === 'number') usageStore = { totalUsd: saved.totalUsd, totalSec: saved.totalSec || 0, months: saved.months || {} };
+        const rates = JSON.parse(localStorage.getItem('ders-akisi-rates') || 'null');
+        if (rates) rateInputs.forEach(input => { if (Number.isFinite(rates[input.id])) input.value = rates[input.id]; });
+      } catch {}
+      function saveUsage() { try { localStorage.setItem('ders-akisi-usage', JSON.stringify(usageStore)); } catch {} }
+      function rate(input) { const value = parseFloat(input.value); return Number.isFinite(value) && value >= 0 ? value : 0; }
+      function hourlyRate(socket) { return rate(rateBase) + rate(ratePrompt) + (socket.billing?.diarized ? rate(rateDiar) : 0); }
+      function openSeconds(socket, until = Date.now()) { return socket.billing?.openedAt ? (until - socket.billing.openedAt) / 1000 : 0; }
+      function liveUsd() { let sum = 0; openSockets.forEach(socket => { sum += openSeconds(socket) / 3600 * hourlyRate(socket); }); return sum; }
+      function liveSec() { let sum = 0; openSockets.forEach(socket => { sum += openSeconds(socket); }); return sum; }
+      function lessonCost() { return lessonClosedUsd + liveUsd(); }
+      function lessonElapsedMs() { return lessonStartedAt ? (running ? Date.now() : (lessonEndedAt || Date.now())) - lessonStartedAt : 0; }
+      function monthKey() { return localDate(new Date()).slice(0, 7); }
+      function commitSocket(socket) {
+        if (!socket.billing?.openedAt) return;
+        const seconds = openSeconds(socket);
+        const usd = seconds / 3600 * hourlyRate(socket);
+        socket.billing.openedAt = 0;
+        openSockets.delete(socket);
+        lessonClosedUsd += usd;
+        lessonClosedSec += seconds;
+        const key = monthKey();
+        const month = usageStore.months[key] || { usd: 0, sec: 0 };
+        month.usd += usd; month.sec += seconds;
+        usageStore.months[key] = month;
+        usageStore.totalUsd += usd;
+        usageStore.totalSec += seconds;
+        saveUsage();
+        updateCost();
+      }
+      function terminateSocket(socket) {
+        try { if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'Terminate' })); } catch {}
+        socket.close();
+      }
+      function usd(value) { return `$${value.toFixed(value >= 1 ? 2 : 3)}`; }
+      function minutes(seconds) { return seconds < 60 ? `${Math.round(seconds)} sn akış` : `${Math.round(seconds / 60)} dk akış`; }
+      function clock(ms) { const total = Math.floor(ms / 1000); const h = Math.floor(total / 3600); const m = Math.floor(total / 60) % 60; const sec = total % 60; return `${h ? `${pad(h)}:` : ''}${pad(m)}:${pad(sec)}`; }
+      function updateCost() {
+        const lesson = lessonCost();
+        const extraUsd = liveUsd();
+        const extraSec = liveSec();
+        const month = usageStore.months[monthKey()] || { usd: 0, sec: 0 };
+        document.querySelector('#costPill').innerHTML = `<span>Bu ders</span>${usd(lesson)}`;
+        document.querySelector('#lessonCostMini').textContent = usd(lesson);
+        document.querySelector('#lessonDuration').textContent = clock(lessonElapsedMs());
+        document.querySelector('#costLesson').textContent = usd(lesson);
+        document.querySelector('#costLessonTime').textContent = minutes(lessonClosedSec + extraSec);
+        document.querySelector('#costMonth').textContent = usd(month.usd + extraUsd);
+        document.querySelector('#costMonthTime').textContent = minutes(month.sec + extraSec);
+        document.querySelector('#costTotal').textContent = usd(usageStore.totalUsd + extraUsd);
+        document.querySelector('#costTotalTime').textContent = minutes(usageStore.totalSec + extraSec);
+      }
+      function resetLessonCost() {
+        lessonClosedUsd = 0; lessonClosedSec = 0; lessonStartedAt = Date.now(); lessonEndedAt = 0;
+        window.clearInterval(costTicker);
+        costTicker = window.setInterval(updateCost, 1000);
+        updateCost();
+      }
+      function stopCostTicker() {
+        lessonEndedAt = Date.now();
+        window.clearInterval(costTicker);
+        window.setTimeout(updateCost, 600);
+        updateCost();
+      }
+      rateInputs.forEach(input => input.addEventListener('input', () => {
+        try { localStorage.setItem('ders-akisi-rates', JSON.stringify(Object.fromEntries(rateInputs.map(item => [item.id, rate(item)])))); } catch {}
+        updateCost();
+      }));
+      const costReset = document.querySelector('#costReset');
+      costReset.addEventListener('click', () => {
+        if (costReset.dataset.armed !== '1') {
+          costReset.dataset.armed = '1';
+          costReset.textContent = 'Emin misin? Tekrar bas';
+          window.setTimeout(() => { costReset.dataset.armed = ''; costReset.textContent = 'Sayaçları sıfırla'; }, 3000);
+          return;
+        }
+        costReset.dataset.armed = '';
+        costReset.textContent = 'Sayaçları sıfırla';
+        usageStore = { totalUsd: 0, totalSec: 0, months: {} };
+        saveUsage();
+        updateCost();
+        toast('Maliyet sayaçları sıfırlandı.', 'success');
+      });
+      document.querySelector('#costPill').addEventListener('click', () => showTab('cost'));
+      window.addEventListener('beforeunload', () => { [...openSockets].forEach(commitSocket); });
+
+
+      start.dataset.label = start.textContent;
+      conversation.addEventListener('scroll', () => {
+        stickToBottom = isNearBottom();
+        if (stickToBottom) jump.hidden = true;
+      });
+      jump.addEventListener('click', scrollToBottom);
+      refresh.addEventListener('click', async () => {
+        refresh.disabled = true;
+        const ok = await populateDevices();
+        refresh.disabled = running;
+        if (ok) { flash(refresh, '✓ Cihazlar bulundu', true, true); toast('Ses cihazları listelendi.', 'success'); }
+        else flash(refresh, 'İzin gerekli', false);
+      });
+      copy.addEventListener('click', copyTranscript);
+      importTranscript.addEventListener('click', () => transcriptFile.click());
+      transcriptFile.addEventListener('change', () => void importTranscriptFile(transcriptFile.files?.[0]));
+      loadHistory.addEventListener('click', fetchHistoryForDate);
+      clearHistory.addEventListener('click', clearLoadedHistory);
+      historyDate.addEventListener('change', () => {
+        if (historyLoadedDate && historyDate.value !== historyLoadedDate) clearLoadedHistory();
+      });
+      claudeLogin.addEventListener('click', beginClaudeLogin);
+      claudeLogout.addEventListener('click', () => logoutDialog.showModal());
+      confirmLogout.addEventListener('click', endClaudeLogin);
+      cancelLogout.addEventListener('click', () => logoutDialog.close());
+      analyze.dataset.label = analyze.textContent;
+      analyze.addEventListener('click', analyzeWithClaude);
+      copyAnalysis.addEventListener('click', copyAnalysisPackage);
+      showChat.addEventListener('click', () => switchView('chat'));
+      showInsights.addEventListener('click', () => { renderInsights(); switchView('insights'); });
+      insightTabs.forEach(tab => tab.addEventListener('click', () => { currentInsightTab = tab.dataset.insightTab; renderInsights(); }));
+      const appShell = document.querySelector('#app');
+      try { if (localStorage.getItem('ders-akisi-collapsed') === '1') appShell.classList.add('collapsed'); } catch {}
+      document.querySelector('#menuToggle').addEventListener('click', () => {
+        appShell.classList.toggle('collapsed');
+        try { localStorage.setItem('ders-akisi-collapsed', appShell.classList.contains('collapsed') ? '1' : '0'); } catch {}
+      });
+      renderInsights();
+      lessonType.addEventListener('change', updateLessonType);
+      updateLessonType();
+      renderTerms();
+      renderFixes();
+      updateCost();
+      updateSonnetCostDisplay();
+      updateDeviceSummary();
+      loadLessonDates();
+      try { const savedTab = localStorage.getItem('ders-akisi-tab'); if (savedTab && savedTab !== 'cost') showTab(savedTab); } catch {}
+      if (isWindows) {
+        hint.innerHTML = '<strong>Windows:</strong> Karşı taraf için <strong>Sistem sesi (ekran paylaşımıyla)</strong> seç; “Dersi başlat”a basınca açılan pencerede <strong>Tüm ekran</strong> → <strong>Sistem sesini de paylaş</strong> işaretle. İstersen VB-Cable / Stereo Mix de seçebilirsin. Kulaklık kullan ki mikrofonun karşı tarafı tekrar almasın.';
+        analyze.disabled = true;
+        analyze.title = 'Claude CLI bağlantısı şu anda Mac sürümünde hazır.';
+        claudeAuthStatus.textContent = 'Bu bağlantı Mac sürümünde hazır';
+        claudeLogin.hidden = true;
+        claudeLogout.hidden = true;
+      } else {
+        refreshClaudeAuth();
+      }
+      fetch('/api/config').then(response => response.ok ? response.json() : null).then(config => { if (config?.vaultPath) vaultPath = config.vaultPath; }).catch(() => {});
+      navigator.mediaDevices?.addEventListener?.('devicechange', populateDevices);
+    </script>
+  </body>
+</html>
