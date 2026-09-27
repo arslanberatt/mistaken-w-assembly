@@ -1,1 +1,6 @@
 .env
+.env.local
+.api-keys.local
+node_modules
+.next
+.DS_Store

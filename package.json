@@ -1,9 +1,16 @@
 {
   "name": "preply-ayri-transkript",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "start": "node server.mjs"
+    "dev": "next dev -p ${PORT:-4173}",
+    "build": "next build",
+    "start": "next start -p ${PORT:-4173}"
+  },
+  "dependencies": {
+    "next": "16.3.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   }
 }

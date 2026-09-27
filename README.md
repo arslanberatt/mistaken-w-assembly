@@ -1,9 +1,8 @@
-# Ders Akışı — yerel deneme
+# Ders Akışı — yerel deneme (Next.js)
 
 Bu deneme, bilgisayardan gelen karşı taraf sesini ve mikrofonunu ayrı ayrı, canlı olarak işler. Karşı taraftaki kişiler `Konuşmacı A`, `Konuşmacı B`, `Konuşmacı C` şeklinde ayrılır; sen ayrı `Ben` olarak görünürsün. Her akışta dolgu sesleri, tekrarlar, yanlış söylenmiş kelimeler ve takılmalar korunmaya çalışılır.
 
 ## İlk kurulum
-
 1. Ücretsiz [BlackHole 2ch](https://existential.audio/blackhole/) sürümünü kur.
 2. `Audio MIDI Setup` uygulamasını aç. Sol alttaki `+` → `Create Multi-Output Device` seç.
 3. Oluşan cihazda kulaklığını/hoparlörünü ve `BlackHole 2ch`yi işaretle. BlackHole için `Drift Correction`ı aç.
@@ -20,6 +19,10 @@ Bu deneme, bilgisayardan gelen karşı taraf sesini ve mikrofonunu ayrı ayrı, 
 13. Sonnet raporu en sık hataları sırayla listeler; ham ifadenle düzeltmeyi yan yana gösterir ve çalışma odağı önerir. Kelimeler sekmesinden kendi kelimelerini ekleyebilir, AI önerilerini kelime kasana kaydedebilirsin. Claude CLI gerçek USD maliyet bildirirse uygulama analiz ve toplam maliyeti gösterir; Pro kullanımında CLI $0 veya maliyet bildirmeyebilir. Bu gösterge Anthropic fatura dökümünün yerine geçmez.
 
 Anahtarlar hiçbir dosyaya yazılmaz; yalnızca açık Terminal oturumunda kalır. Uygulama açıkken Terminal penceresini kapatma.
+
+## Teknik not
+
+Uygulama artık Next.js üzerinde çalışıyor (App Router + Route Handler'lar); davranış ve arayüz birebir aynı. `run.command` ilk çalıştırmada `node_modules` yoksa otomatik `npm install` yapar, sonra `npm run dev` ile `http://localhost:4173` adresinde başlatır. Elle çalıştırmak istersen: `npm install` (bir kere), sonra `npm run dev` (geliştirme) veya `npm run build && npm start` (üretim modu).
 
 ## Windows
 
