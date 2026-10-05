@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#10151f" />
+    <meta name="theme-color" content="#db4c3f" />
     <title>Ders Akışı</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2310161f'/%3E%3Cpath d='M20 21v22M32 15v34M44 24v16' stroke='%236ee7c8' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,12 +12,12 @@
     <style>
       :root {
         color-scheme: light;
-        --background: #ffffff; --foreground: #201b1e;
-        --card: #ffffff; --card-foreground: #201b1e;
-        --muted: #f6f1f2; --muted-2: #ebe1e3; --muted-foreground: #746e72;
-        --border: #e6dcdf; --input: #d8cbcf; --ring: #0e8f72;
-        --primary: #0e8f72; --primary-foreground: #ffffff;
-        --accent: #0e8f72; --accent-soft: #dcf2ea; --accent-fg: #0b6b57;
+        --background: #ffffff; --foreground: #202020;
+        --card: #ffffff; --card-foreground: #202020;
+        --muted: #fafafa; --muted-2: #eeeeee; --muted-foreground: #6b6b6b;
+        --border: #ededed; --input: #dddddd; --ring: #db4c3f;
+        --primary: #db4c3f; --primary-foreground: #ffffff;
+        --accent: #db4c3f; --accent-soft: #fdecea; --accent-fg: #b83a2e;
         --pink: #d64545; --pink-soft: #fbe7e5; --pink-fg: #a83737;
         --success: #1f8a4c; --success-soft: #e7f5ec; --success-fg: #1c703f;
         --danger: #c8402c; --danger-soft: #fbe9e4; --danger-fg: #9c3320;
@@ -25,11 +25,11 @@
         --blue: #3a63a8; --blue-soft: #e8eef8; --blue-fg: #2c4d84;
         --coral: #cc6a35; --coral-soft: #f9e9dc; --coral-fg: #a15127;
         --lav: #7a5fbf; --lav-soft: #ebe5f8; --lav-fg: #5c4592;
-        --me-bg: #0e8f72; --me-fg: #ffffff;
+        --me-bg: #db4c3f; --me-fg: #ffffff;
         --shadow: 0 1px 2px rgba(32, 27, 30, .05), 0 1px 1px rgba(32, 27, 30, .03);
-        --radius: 12px; --radius-lg: 20px; --radius-pill: 999px;
+        --radius: 8px; --radius-lg: 10px; --radius-pill: 999px;
         --font: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-        --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+        --font-display: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
         --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       }
       * { box-sizing: border-box; }
@@ -55,15 +55,15 @@
       .side-sep { height: 1px; background: var(--border); flex: none; margin: 1px 0; }
       .side-nav-label { margin: 1px 0 -2px; padding: 0 12px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-foreground); flex: none; }
       .side-nav { display: grid; gap: 1px; flex: none; }
-      .side-nav-item { position: relative; display: flex; align-items: center; justify-content: flex-start; gap: 10px; height: 36px; padding: 0 9px; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--muted-foreground); font-size: 13px; font-weight: 500; text-align: left; transition: background-color .15s cubic-bezier(.4,0,.2,1), color .15s cubic-bezier(.4,0,.2,1); }
-      .side-nav-item:hover:not(:disabled) { opacity: 1; background: var(--card); color: var(--foreground); }
-      .side-nav-item[aria-selected="true"] { background: var(--card); color: var(--accent-fg); font-weight: 600; box-shadow: var(--shadow); }
+      .side-nav-item { position: relative; display: flex; align-items: center; justify-content: flex-start; gap: 10px; height: 34px; padding: 0 9px; border: 0; border-radius: var(--radius); background: transparent; color: var(--muted-foreground); font-size: 13px; font-weight: 500; text-align: left; transition: background-color .15s cubic-bezier(.4,0,.2,1), color .15s cubic-bezier(.4,0,.2,1); }
+      .side-nav-item:hover:not(:disabled) { opacity: 1; background: #f0f0f0; color: var(--foreground); }
+      .side-nav-item[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-fg); font-weight: 600; box-shadow: none; }
       .nav-icon { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: var(--radius-pill); color: inherit; transition: background-color .15s cubic-bezier(.4,0,.2,1), color .15s cubic-bezier(.4,0,.2,1); }
-      .side-nav-item[aria-selected="true"] .nav-icon { background: var(--accent-soft); color: var(--accent-fg); }
-      .side-nav-item.c-blue[aria-selected="true"] .nav-icon { background: var(--blue-soft); color: var(--blue-fg); }
-      .side-nav-item.c-coral[aria-selected="true"] .nav-icon { background: var(--coral-soft); color: var(--coral-fg); }
-      .side-nav-item.c-warn[aria-selected="true"] .nav-icon { background: var(--warn-soft); color: var(--warn-fg); }
-      .side-nav-item.c-lav[aria-selected="true"] .nav-icon { background: var(--lav-soft); color: var(--lav-fg); }
+      .side-nav-item[aria-selected="true"] .nav-icon { background: transparent; color: var(--accent-fg); }
+      .side-nav-item.c-blue[aria-selected="true"] .nav-icon { background: transparent; color: var(--accent-fg); }
+      .side-nav-item.c-coral[aria-selected="true"] .nav-icon { background: transparent; color: var(--accent-fg); }
+      .side-nav-item.c-warn[aria-selected="true"] .nav-icon { background: transparent; color: var(--accent-fg); }
+      .side-nav-item.c-lav[aria-selected="true"] .nav-icon { background: transparent; color: var(--accent-fg); }
 
       /* collapsed: slim icon rail — sidebar stays visible, only labels/quick-controls hide */
       .app.collapsed .sidebar { width: 60px; padding: 16px 8px; align-items: center; background: var(--muted); }
@@ -335,8 +335,10 @@
       .fb-text { padding: 8px 12px; border-radius: var(--radius); font-size: 14px; line-height: 1.6; }
       .fb-text.bad { background: var(--danger-soft); }
       .fb-text.good { background: var(--success-soft); }
-      .fb-text del { text-decoration: underline wavy var(--danger); text-decoration-thickness: 2px; text-underline-offset: 4px; color: var(--danger-fg); font-weight: 600; background: rgba(200, 64, 44, .14); border-radius: 4px; padding: 0 2px; }
+      .fb-text del { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--danger-fg); font-weight: 600; background: rgba(200, 64, 44, .14); border-radius: 4px; padding: 0 2px; }
       .fb-text ins { text-decoration: none; color: var(--success-fg); font-weight: 700; background: rgba(31, 138, 76, .14); border-radius: 4px; padding: 0 2px; border-bottom: 2px solid var(--success); }
+      .report-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); }
+      .report-row > div { display: grid; gap: 2px; min-width: 0; }
       .vocab-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; padding: 10px; border-radius: var(--radius); background: var(--muted); border: 1px solid var(--border); }
       .vocab-form button { height: 34px; }
       .vocab-card { display: grid; gap: 10px; }
@@ -516,6 +518,7 @@
               <button type="button" data-insight-tab="feedback" aria-selected="false">Düzeltmeler</button>
               <button type="button" data-insight-tab="vocabulary" aria-selected="false">Kelimeler</button>
               <button type="button" data-insight-tab="study" aria-selected="false">Çalışma planı</button>
+              <button type="button" data-insight-tab="reports" aria-selected="false">Kayıtlı raporlar</button>
             </div>
             <div id="insightContent" class="insight-panel"></div>
           </div>
@@ -1371,10 +1374,36 @@
         return details;
       }
 
+      async function renderSavedReports() {
+        insightContent.replaceChildren(node('p', 'Kayıtlı raporlar yükleniyor…', 'insight-note'));
+        try {
+          const response = await fetch('/api/reports');
+          const { reports = [] } = await response.json();
+          insightContent.replaceChildren(node('p', `Raporlar kasa klasöründe (${vaultPath}/Reports) Markdown ve JSON olarak durur; Obsidian kurulu olmasa da buradan açılır.`, 'insight-note'));
+          if (!reports.length) insightContent.append(tip('Henüz kayıtlı rapor yok. Bir dersi analiz edince burada görünür.', true));
+          reports.forEach(item => {
+            const open = node('button', 'Aç'); open.type = 'button'; open.className = 'secondary';
+            open.addEventListener('click', async () => {
+              try {
+                const detail = await (await fetch(`/api/reports?file=${encodeURIComponent(item.file)}`)).json();
+                if (!detail.report) throw new Error(detail.error || 'Rapor açılamadı.');
+                insightReport = detail.report; lastInsightCostUsd = detail.costUsd ?? null; lastInsightSavedAs = item.file;
+                currentInsightTab = 'feedback'; renderInsights();
+              } catch (error) { toast(error.message, 'error', 4500); }
+            });
+            const row = node('div', undefined, 'report-row');
+            const text = node('div'); text.append(node('b', `${item.date} · ${item.title}`), node('span', `${item.errors} düzeltme · ${item.lessons} ders`, 'insight-note'));
+            row.append(text, open);
+            insightContent.append(row);
+          });
+        } catch (error) { insightContent.replaceChildren(tip(`Raporlar okunamadı: ${error.message}`)); }
+      }
+
       function renderInsights() {
         insightContent.replaceChildren();
         insightTabs.forEach(tab => tab.setAttribute('aria-selected', String(tab.dataset.insightTab === currentInsightTab)));
         if (analysisLoader.active) { renderLoader(); return; }
+        if (currentInsightTab === 'reports') { renderSavedReports(); return; }
         if (!insightReport) {
           const box = node('div', undefined, 'onboard');
           box.append(node('h3', 'Ders içgörüleri'),
@@ -1421,15 +1450,15 @@
           if (progress.trendNote) insightContent.append(tip(progress.trendNote, true));
           insightContent.append(node('p', 'Kategori yüzdeleri yalnızca bulunan hataların dağılımıdır; genel İngilizce doğruluk puanı değildir.', 'insight-note'));
         } else if (currentInsightTab === 'feedback') {
-          insightContent.append(node('p', 'Altı çizili kırmızı kısımlar hatalı, yeşil kısımlar önerilen doğru kullanım.', 'insight-note'));
           const items = report.feedback || [];
+          insightContent.append(node('p', `${items.length} düzeltme · kırmızı üstü çizili kısımlar hatalı, yeşil kısımlar doğru kullanım. Saatler transkriptten doğrulanır.`, 'insight-note'));
           items.forEach((item, index) => {
             const diff = wordDiff(item.original, item.correction);
             const before = node('div', undefined, 'fb-row'); before.append(node('span', 'Sen dedin', 'fb-label bad'), diffText(diff.a, 'del'));
             const after = node('div', undefined, 'fb-row'); after.append(node('span', 'Doğrusu', 'fb-label good'), diffText(diff.b, 'ins'));
             const body = [before, after];
             if (item.reason) body.push(tip(item.reason));
-            insightContent.append(accordion(item.original, `${item.time || ''}`.trim(), body, { open: index === 0, lead: node('span', item.category || 'Hata', `pill ${pillColor(item.category)}`) }));
+            insightContent.append(accordion(item.original, `${item.time || ''}`.trim(), body, { open: true, lead: node('span', item.category || 'Hata', `pill ${pillColor(item.category)}`) }));
           });
           if (!items.length) insightContent.append(tip('Onaylı hata bulunmadı.', true));
         } else if (currentInsightTab === 'vocabulary') {
